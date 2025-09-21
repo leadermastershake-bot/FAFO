@@ -94,6 +94,22 @@
             height: 580px;
         }
 
+        #charting-panel {
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            display: none; /* Initially hidden */
+        }
+
+        #news-panel {
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 400px;
+        }
+
         #database-panel {
             bottom: 200px;
             left: 20px;
@@ -579,6 +595,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0/dist/tf-backend-webgl.min.js"></script>
   <script src="https://unpkg.com/tmi.js/dist/tmi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.0.8/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <!-- Enhanced Login Screen -->
@@ -619,8 +636,10 @@
         <div class="menu-separator"></div>
         <div class="menu-item" onclick="togglePanel('system-panel')">📊 System</div>
         <div class="menu-item" onclick="togglePanel('trading-panel')">📈 Trading</div>
+        <div class="menu-item" onclick="togglePanel('charting-panel')">📊 Charting</div>
         <div class="menu-item" onclick="togglePanel('database-panel')">🗃️ Database</div>
         <div class="menu-item" onclick="togglePanel('agents-panel')">🤖 Agents</div>
+        <div class="menu-item" onclick="togglePanel('news-panel')">📰 News</div>
         <div class="menu-item" onclick="togglePanel('chat-panel')">💬 Chat</div>
         <div class="menu-separator"></div>
         <div class="menu-item" onclick="openWalletManager()">💛 Wallets</div>
@@ -718,6 +737,12 @@
                 </div>
             </div>
 
+            <div style="background: rgba(0, 100, 255, 0.1); border: 1px solid #0066cc; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                <h4>🔌 Exchange Configuration</h4>
+                <button onclick="openExchangeWizard()" style="width: 100%;">⚙️ Configure Exchange API</button>
+                <div style="font-size: 11px; margin-top: 8px;">Status: <span id="exchange-status" style="color: #ff4444;">Not Connected</span></div>
+            </div>
+
             <div style="background: rgba(0, 255, 136, 0.05); border: 1px solid #00ff88; border-radius: 8px; padding: 15px; margin: 15px 0;">
                 <h4>📊 Recent Performance</h4>
                 <div id="recent-trades" style="max-height: 120px; overflow-y: auto; background: rgba(0, 0, 0, 0.5); padding: 8px; border-radius: 4px; font-size: 10px;">
@@ -739,6 +764,35 @@
                     Market Timing:
                     <div class="progress-bar"><div class="progress-fill" id="timing-progress" style="width: 0%"></div></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charting Panel -->
+    <div id="charting-panel" class="draggable-panel">
+        <div class="panel-header">
+            <span>📊 Financial Chart</span>
+            <div class="panel-controls">
+                <div class="panel-btn minimize-btn" onclick="minimizePanel('charting-panel')">−</div>
+                <div class="panel-btn maximize-btn" onclick="maximizePanel('charting-panel')">□</div>
+                <div class="panel-btn close-btn" onclick="closePanel('charting-panel')">×</div>
+            </div>
+        </div>
+        <div class="panel-content" style="display: flex; flex-direction: column; height: 100%; padding: 0;">
+            <div id="chart-controls" style="padding: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 255, 136, 0.1); border-bottom: 1px solid #00ff88;">
+                <div>
+                    <button onclick="chartingSystem.setTimeframe('1h')">1H</button>
+                    <button onclick="chartingSystem.setTimeframe('1d')">1D</button>
+                    <button onclick="chartingSystem.setTimeframe('1w')">1W</button>
+                    <button onclick="chartingSystem.setTimeframe('1y')">1Y</button>
+                </div>
+                <div id="ticker" style="font-size: 18px; font-weight: bold;">
+                    <span>BTC/USD:</span>
+                    <span id="ticker-price">--.--</span>
+                </div>
+            </div>
+            <div id="chart-container" style="flex-grow: 1;">
+                <!-- Chart will be rendered here -->
             </div>
         </div>
     </div>
@@ -847,6 +901,28 @@
         <div class="panel-content">
             <div id="chat-log" style="height: 80px; overflow-y: auto; margin-bottom: 10px; padding: 10px; background: rgba(0, 0, 0, 0.6); border: 1px solid #004400; border-radius: 4px; font-size: 11px;"></div>
             <input type="text" id="user-input" placeholder="Ask METABOTPRIME LLM about trading, configurations, or request automated assistance..." onkeypress="handleInput(event)" style="width: 100%; background: rgba(0, 0, 0, 0.7); border: 1px solid #00ff88; color: #00ff88; padding: 8px; font-family: inherit; border-radius: 4px; font-size: 12px;">
+        </div>
+    </div>
+
+    <!-- News & Sentiment Panel -->
+    <div id="news-panel" class="draggable-panel">
+        <div class="panel-header">
+            <span>📰 News & Sentiment</span>
+            <div class="panel-controls">
+                <div class="panel-btn minimize-btn" onclick="minimizePanel('news-panel')">−</div>
+                <div class="panel-btn maximize-btn" onclick="maximizePanel('news-panel')">□</div>
+                <div class="panel-btn close-btn" onclick="closePanel('news-panel')">×</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="form-group">
+                <label>MarketAux API Key:</label>
+                <input type="password" id="marketaux-api-key" placeholder="Enter your API key">
+                <button onclick="newsSystem.fetchNews()" style="width: 100%; margin-top: 5px;">Fetch News</button>
+            </div>
+            <div id="news-content" style="margin-top: 10px; height: calc(100% - 100px); overflow-y: auto;">
+                <div style="text-align: center; color: #666;">Enter API key and fetch news...</div>
+            </div>
         </div>
     </div>
 
@@ -1125,6 +1201,52 @@
         </div>
     </div>
 
+    <!-- Exchange Configuration Wizard Modal -->
+    <div id="exchange-wizard-modal" class="modal-overlay">
+        <div class="modal">
+            <h3>🔌 Exchange API Setup Wizard</h3>
+            <div class="wizard-step active" id="exchange-wizard-step-1">
+                <h4>Step 1: Select Exchange</h4>
+                <div class="form-group">
+                    <label>Exchange:</label>
+                    <select id="exchange-select">
+                        <option value="">Choose an exchange...</option>
+                        <option value="binance">Binance</option>
+                        <option value="coinbase">Coinbase Pro</option>
+                        <option value="kucoin">KuCoin</option>
+                        <option value="kraken">Kraken</option>
+                    </select>
+                </div>
+                <button onclick="exchangeManager.nextStep(2)" class="primary">Next →</button>
+            </div>
+
+            <div class="wizard-step" id="exchange-wizard-step-2">
+                <h4>Step 2: API Credentials</h4>
+                <div class="form-group">
+                    <label>API Key:</label>
+                    <input type="text" id="exchange-api-key" placeholder="Enter your API key">
+                </div>
+                <div class="form-group">
+                    <label>API Secret:</label>
+                    <input type="password" id="exchange-api-secret" placeholder="Enter your API secret">
+                </div>
+                <button onclick="exchangeManager.nextStep(1)">← Back</button>
+                <button onclick="exchangeManager.testConnection()" class="primary">🔌 Test Connection</button>
+            </div>
+
+            <div class="wizard-step" id="exchange-wizard-step-3">
+                <h4>Step 3: Confirmation</h4>
+                <div id="exchange-test-result" style="padding: 15px; margin: 10px 0; border-radius: 6px;"></div>
+                <button onclick="exchangeManager.nextStep(2)">← Back</button>
+                <button onclick="exchangeManager.saveConnection()" class="primary" disabled id="save-exchange-btn">🚀 Save Connection</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="closeModal('exchange-wizard-modal')">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Enhanced Global State Management
         const STATE = {
@@ -1133,6 +1255,11 @@
                 accessLevel: 'user',
                 isLoggedIn: false,
                 permissions: []
+            },
+            exchange: {
+                connected: false,
+                exchange: null,
+                apiKey: null,
             },
             database: {
                 configured: false,
@@ -1878,6 +2005,18 @@
                     if (Math.abs(improvement) > 0.02) {
                         const sign = improvement > 0 ? '+' : '';
                         addChatMessage('agent', `🤖 ${agent.name}: Performance change: ${sign}${(improvement * 100).toFixed(1)}%`);
+                    }
+
+                    // ALPHA agent generates suggestions
+                    if (agent.id === 'alpha' && Math.random() < 0.3) { // 30% chance to make a suggestion
+                        const data = chartingSystem.data.get(chartingSystem.timeframe);
+                        if (data && data.length > 0) {
+                            const lastPoint = data[data.length - 1];
+                            const suggestionType = Math.random() > 0.5 ? 'buy' : 'sell';
+                            const reason = suggestionType === 'buy' ? 'Price broke resistance' : 'Price broke support';
+                            chartingSystem.addSuggestionMarker(lastPoint.time, lastPoint.close, suggestionType, reason);
+                            addChatMessage('agent', `🤖 ${agent.name} suggests to ${suggestionType} based on chart patterns.`);
+                        }
                     }
 
                     agent.status = previousStatus === 'learning' ? 'learning' : 'active';
@@ -2698,8 +2837,298 @@
             }
         }
 
+        // Enhanced Charting System
+        class ChartingSystem {
+            constructor() {
+                this.chart = null;
+                this.candlestickSeries = null;
+                this.timeframe = '1d';
+                this.data = new Map();
+                this.tickerInterval = null;
+            }
+
+            initialize() {
+                const chartContainer = document.getElementById('chart-container');
+                if (!chartContainer) return;
+
+                this.chart = LightweightCharts.createChart(chartContainer, {
+                    width: chartContainer.clientWidth,
+                    height: chartContainer.clientHeight,
+                    layout: {
+                        background: { type: 'solid', color: '#0a0a0a' },
+                        textColor: '#00ff88',
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(0, 255, 136, 0.1)' },
+                        horzLines: { color: 'rgba(0, 255, 136, 0.1)' },
+                    },
+                    timeScale: {
+                        borderColor: '#00ff88',
+                    },
+                    rightPriceScale: {
+                        borderColor: '#00ff88',
+                    },
+                });
+
+                this.candlestickSeries = this.chart.addCandlestickSeries({
+                    upColor: '#00ff88',
+                    downColor: '#ff4444',
+                    borderDownColor: '#ff4444',
+                    borderUpColor: '#00ff88',
+                    wickDownColor: '#ff4444',
+                    wickUpColor: '#00ff88',
+                });
+
+                this.generateData();
+                this.setTimeframe('1d');
+                this.startTicker();
+
+                new ResizeObserver(this.handleResize.bind(this)).observe(chartContainer);
+            }
+
+            handleResize(entries) {
+                if (entries[0]) {
+                    const { width, height } = entries[0].contentRect;
+                    this.chart.resize(width, height);
+                }
+            }
+
+            generateData() {
+                const timeframes = ['1h', '1d', '1w', '1y'];
+                timeframes.forEach(tf => {
+                    this.data.set(tf, this.generateCandlestickData(tf));
+                });
+            }
+
+            generateCandlestickData(timeframe) {
+                let data = [];
+                let time = new Date();
+                let points, timeUnit, timeStep;
+
+                switch (timeframe) {
+                    case '1h':
+                        points = 60;
+                        timeUnit = 'minute';
+                        timeStep = 1;
+                        break;
+                    case '1d':
+                        points = 24;
+                        timeUnit = 'hour';
+                        timeStep = 1;
+                        break;
+                    case '1w':
+                        points = 7;
+                        timeUnit = 'day';
+                        timeStep = 1;
+                        break;
+                    case '1y':
+                        points = 52;
+                        timeUnit = 'week';
+                        timeStep = 1;
+                        break;
+                }
+
+                time.setMilliseconds(0);
+                time.setSeconds(0);
+                if (timeUnit === 'hour' || timeUnit === 'day' || timeUnit === 'week') time.setMinutes(0);
+                if (timeUnit === 'day' || timeUnit === 'week') time.setHours(0);
+                if (timeUnit === 'week') time.setDate(time.getDate() - time.getDay());
+
+
+                let price = 50000;
+                for (let i = 0; i < points; i++) {
+                    const open = price;
+                    const close = open + (Math.random() - 0.5) * 500;
+                    const high = Math.max(open, close) + Math.random() * 200;
+                    const low = Math.min(open, close) - Math.random() * 200;
+
+                    let t = new Date(time);
+                    if (timeUnit === 'minute') t.setMinutes(time.getMinutes() - (points - i) * timeStep);
+                    if (timeUnit === 'hour') t.setHours(time.getHours() - (points - i) * timeStep);
+                    if (timeUnit === 'day') t.setDate(time.getDate() - (points - i) * timeStep);
+                    if (timeUnit === 'week') t.setDate(time.getDate() - (points - i) * timeStep * 7);
+
+                    data.push({ time: t.getTime() / 1000, open, high, low, close });
+                    price = close;
+                }
+                return data;
+            }
+
+            setTimeframe(timeframe) {
+                this.timeframe = timeframe;
+                const data = this.data.get(timeframe);
+                this.candlestickSeries.setData(data);
+                this.chart.timeScale().fitContent();
+                addChatMessage('chart', `📊 Chart timeframe set to: ${timeframe.toUpperCase()}`);
+            }
+
+            startTicker() {
+                if (this.tickerInterval) clearInterval(this.tickerInterval);
+                this.tickerInterval = setInterval(() => {
+                    const lastData = this.data.get(this.timeframe).slice(-1)[0];
+                    if (lastData) {
+                        const newPrice = lastData.close + (Math.random() - 0.5) * 10;
+                        document.getElementById('ticker-price').textContent = newPrice.toFixed(2);
+
+                        const lastPoint = this.data.get(this.timeframe)[this.data.get(this.timeframe).length - 1];
+                        lastPoint.close = newPrice;
+                        if (newPrice > lastPoint.high) lastPoint.high = newPrice;
+                        if (newPrice < lastPoint.low) lastPoint.low = newPrice;
+
+                        this.candlestickSeries.update(lastPoint);
+                    }
+                }, 1500);
+            }
+
+            addSuggestionMarker(time, price, type, text) {
+                const marker = {
+                    time: time,
+                    position: price > this.candlestickSeries.data().slice(-1)[0].close ? 'aboveBar' : 'belowBar',
+                    color: type === 'buy' ? '#00ff88' : '#ff4444',
+                    shape: type === 'buy' ? 'arrowUp' : 'arrowDown',
+                    text: `${type.toUpperCase()}: ${text}`
+                };
+                this.candlestickSeries.setMarkers([
+                    ...this.candlestickSeries.markers(),
+                    marker
+                ]);
+            }
+        }
+
+        // News & Sentiment System
+        class NewsSystem {
+            constructor() {
+                this.apiKey = '';
+            }
+
+            async fetchNews() {
+                this.apiKey = document.getElementById('marketaux-api-key').value.trim();
+                if (!this.apiKey) {
+                    notificationManager.show('Please enter a MarketAux API key.', 'error');
+                    return;
+                }
+
+                const url = `https://api.marketaux.com/v1/news/all?symbols=TSLA,AMZN,MSFT&filter_entities=true&language=en&api_token=${this.apiKey}`;
+                const newsContent = document.getElementById('news-content');
+                newsContent.innerHTML = '<div style="text-align: center; color: #666;">Fetching news...</div>';
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    this.displayNews(data.data);
+                    addChatMessage('news', `📰 Fetched ${data.data.length} news articles.`);
+                } catch (error) {
+                    notificationManager.show(`Failed to fetch news: ${error.message}`, 'error');
+                    newsContent.innerHTML = `<div style="text-align: center; color: #ff4444;">Failed to fetch news. Check API key and console.</div>`;
+                    addChatMessage('news', `❌ Error fetching news: ${error.message}`);
+                }
+            }
+
+            displayNews(articles) {
+                const newsContent = document.getElementById('news-content');
+                if (articles.length === 0) {
+                    newsContent.innerHTML = '<div style="text-align: center; color: #666;">No news articles found.</div>';
+                    return;
+                }
+
+                newsContent.innerHTML = articles.map(article => this.createArticleHtml(article)).join('');
+            }
+
+            createArticleHtml(article) {
+                const sentimentScore = article.entities[0]?.sentiment_score || 0;
+                const sentiment = this.getSentiment(sentimentScore);
+
+                return `
+                    <div style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.4); border-left: 3px solid ${sentiment.color}; border-radius: 4px;">
+                        <a href="${article.url}" target="_blank" style="color: #00c8ff; text-decoration: none;">${article.title}</a>
+                        <div style="font-size: 10px; color: #999; margin-top: 4px;">
+                            <span>${article.source}</span> |
+                            <span style="color: ${sentiment.color}; font-weight: bold;">${sentiment.label} (${sentimentScore.toFixed(2)})</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getSentiment(score) {
+                if (score > 0.35) return { label: 'Positive', color: '#00ff88' };
+                if (score < -0.35) return { label: 'Negative', color: '#ff4444' };
+                return { label: 'Neutral', color: '#ffaa00' };
+            }
+        }
+
+        // Exchange Management System
+        class ExchangeManager {
+            constructor() {
+                this.currentStep = 1;
+                this.connectionDetails = {};
+            }
+
+            openWizard() {
+                document.getElementById('exchange-wizard-modal').style.display = 'flex';
+                this.nextStep(1);
+            }
+
+            nextStep(step) {
+                document.querySelectorAll('#exchange-wizard-modal .wizard-step').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.getElementById(`exchange-wizard-step-${step}`).classList.add('active');
+                this.currentStep = step;
+            }
+
+            async testConnection() {
+                const exchange = document.getElementById('exchange-select').value;
+                const apiKey = document.getElementById('exchange-api-key').value.trim();
+                const apiSecret = document.getElementById('exchange-api-secret').value.trim();
+
+                if (!exchange || !apiKey || !apiSecret) {
+                    notificationManager.show('Please fill all fields.', 'error');
+                    return;
+                }
+
+                this.connectionDetails = { exchange, apiKey, apiSecret };
+                const resultDiv = document.getElementById('exchange-test-result');
+                resultDiv.innerHTML = 'Testing connection...';
+                resultDiv.style.background = 'rgba(255, 170, 0, 0.15)';
+
+                this.nextStep(3);
+
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+
+                // Simulate success or failure
+                if (Math.random() > 0.2) { // 80% success
+                    resultDiv.innerHTML = `✅ Connection to ${exchange.toUpperCase()} successful!`;
+                    resultDiv.style.background = 'rgba(0, 255, 136, 0.15)';
+                    document.getElementById('save-exchange-btn').disabled = false;
+                } else {
+                    resultDiv.innerHTML = `❌ Connection to ${exchange.toUpperCase()} failed. Please check your credentials.`;
+                    resultDiv.style.background = 'rgba(255, 68, 68, 0.15)';
+                    document.getElementById('save-exchange-btn').disabled = true;
+                }
+            }
+
+            saveConnection() {
+                STATE.exchange = {
+                    connected: true,
+                    ...this.connectionDetails
+                };
+                document.getElementById('exchange-status').textContent = `Connected to ${this.connectionDetails.exchange.toUpperCase()}`;
+                document.getElementById('exchange-status').style.color = '#00ff88';
+                addChatMessage('exchange', `🔌 Connected to ${this.connectionDetails.exchange.toUpperCase()} exchange.`);
+                notificationManager.show(`Saved connection to ${this.connectionDetails.exchange.toUpperCase()}`, 'success');
+                closeModal('exchange-wizard-modal');
+            }
+        }
+
+        function openExchangeWizard() {
+            exchangeManager.openWizard();
+        }
+
         // Global instances
-        let dbManager, agentSystem, authSystem, notificationManager, walletManager, llmSystem, reportGenerator, twitchManager;
+        let dbManager, agentSystem, authSystem, notificationManager, walletManager, llmSystem, reportGenerator, twitchManager, chartingSystem, newsSystem, exchangeManager;
         let particles = [];
         let startTime = Date.now();
         let dragElement = null;
@@ -2716,6 +3145,9 @@
             llmSystem = new LLMIntegration();
             reportGenerator = new ReportGenerator();
             twitchManager = new TwitchManager();
+            chartingSystem = new ChartingSystem();
+            newsSystem = new NewsSystem();
+            exchangeManager = new ExchangeManager();
 
             // Initialize UI elements
             initializeParticles();
@@ -2957,6 +3389,12 @@
             if (panel.style.display === 'none') {
                 panel.style.display = 'block';
                 STATE.panels.minimized.delete(panelId);
+
+                if (panelId === 'charting-panel' && !chartingSystem.initialized) {
+                    chartingSystem.initialize();
+                    chartingSystem.initialized = true;
+                }
+
             } else {
                 panel.style.display = 'none';
                 STATE.panels.minimized.add(panelId);
