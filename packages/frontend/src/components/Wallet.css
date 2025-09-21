@@ -1,0 +1,24 @@
+.wallet-container {
+  background-color: #1a1a1a;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #00ff88;
+  margin-bottom: 2rem;
+}
+
+.wallet-container.error {
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.wallet-container h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #00ff88;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.wallet-container p {
+  margin: 0.5rem 0;
+  word-wrap: break-word;
+}

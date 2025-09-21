@@ -1,0 +1,35 @@
+.trading-container {
+  background-color: #1a1a1a;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #00ff88;
+}
+
+.trading-container h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #00ff88;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.trading-forms {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.trading-form {
+  border: 1px solid #333;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.trading-form h3 {
+  margin-top: 0;
+}
+
+.result-message {
+  color: #00ff88;
+  margin-top: 1rem;
+  word-wrap: break-word;
+}
