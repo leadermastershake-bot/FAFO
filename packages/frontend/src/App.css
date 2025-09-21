@@ -1,0 +1,67 @@
+:root {
+  font-family: 'Courier New', monospace;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --background-color: #0a0a0a;
+  --text-color: #00ff88;
+  --header-background: #1a1a1a;
+  --border-color: #00ff88;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  background-color: var(--header-background);
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.app-header nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.app-header nav span {
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.app-header nav span:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.app-main {
+  flex-grow: 1;
+  padding: 2rem;
+}
+
+.app-footer {
+  background-color: var(--header-background);
+  padding: 0.5rem 2rem;
+  border-top: 1px solid var(--border-color);
+  text-align: right;
+  font-size: 0.8rem;
+}
