@@ -94,6 +94,22 @@
             height: 580px;
         }
 
+        #charting-panel {
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            display: none; /* Initially hidden */
+        }
+
+        #news-panel {
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 400px;
+        }
+
         #database-panel {
             bottom: 200px;
             left: 20px;
@@ -569,7 +585,7 @@
                 margin-bottom: 20px;
                 resize: none;
             }
-            
+
             body {
                 overflow-y: auto;
             }
@@ -578,6 +594,8 @@
 <!-- TensorFlow.js -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0/dist/tf-backend-webgl.min.js"></script>
+  <script src="https://unpkg.com/tmi.js/dist/tmi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.0.8/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <!-- Enhanced Login Screen -->
@@ -618,13 +636,16 @@
         <div class="menu-separator"></div>
         <div class="menu-item" onclick="togglePanel('system-panel')">📊 System</div>
         <div class="menu-item" onclick="togglePanel('trading-panel')">📈 Trading</div>
+        <div class="menu-item" onclick="togglePanel('charting-panel')">📊 Charting</div>
         <div class="menu-item" onclick="togglePanel('database-panel')">🗃️ Database</div>
         <div class="menu-item" onclick="togglePanel('agents-panel')">🤖 Agents</div>
+        <div class="menu-item" onclick="togglePanel('news-panel')">📰 News</div>
         <div class="menu-item" onclick="togglePanel('chat-panel')">💬 Chat</div>
         <div class="menu-separator"></div>
         <div class="menu-item" onclick="openWalletManager()">💛 Wallets</div>
         <div class="menu-item" onclick="openNodeManager()">🌐 Nodes</div>
         <div class="menu-item" onclick="openReportPanel()">📋 Reports</div>
+        <div class="menu-item" onclick="togglePanel('twitch-panel')">👾 Twitch</div>
         <div class="menu-separator"></div>
         <div class="menu-item admin" onclick="openAdminPanel()" id="admin-menu" style="display: none;">⚙️ Admin</div>
         <div style="margin-left: auto;">
@@ -653,7 +674,7 @@
             <div>🎯 Success Rate: <span id="success-rate">0%</span></div>
             <div>💹 Total Trades: <span id="total-trades">0</span></div>
             <div>⏱️ Uptime: <span id="uptime">00:00:00</span></div>
-            
+
             <div style="margin-top: 15px;">
                 <div>🔐 Security Level: <span id="security-level">HIGH</span></div>
                 <div>🌐 Network Health: <span id="network-health">OPTIMAL</span></div>
@@ -705,15 +726,21 @@
                     <button id="auto-trade-btn" onclick="toggleAutonomousTrading()" class="primary" disabled>⏳ Configuring...</button>
                     <button onclick="emergencyStop()" class="danger">🛑 Emergency Stop</button>
                 </div>
-                
+
                 <div style="margin: 10px 0;">
-                    Risk Level: 
+                    Risk Level:
                     <select id="risk-level" onchange="updateRiskLevel()">
                         <option value="conservative">Conservative (5%)</option>
                         <option value="moderate" selected>Moderate (15%)</option>
                         <option value="aggressive">Aggressive (35%)</option>
                     </select>
                 </div>
+            </div>
+
+            <div style="background: rgba(0, 100, 255, 0.1); border: 1px solid #0066cc; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                <h4>🔌 Exchange Configuration</h4>
+                <button onclick="openExchangeWizard()" style="width: 100%;">⚙️ Configure Exchange API</button>
+                <div style="font-size: 11px; margin-top: 8px;">Status: <span id="exchange-status" style="color: #ff4444;">Not Connected</span></div>
             </div>
 
             <div style="background: rgba(0, 255, 136, 0.05); border: 1px solid #00ff88; border-radius: 8px; padding: 15px; margin: 15px 0;">
@@ -726,17 +753,50 @@
             <div style="background: rgba(255, 165, 0, 0.1); border: 1px solid #ffa500; border-radius: 8px; padding: 15px;">
                 <h4>🎯 Learning Progress</h4>
                 <div style="margin: 8px 0;">
-                    Pattern Recognition: 
+                    Pattern Recognition:
                     <div class="progress-bar"><div class="progress-fill" id="pattern-progress" style="width: 0%"></div></div>
                 </div>
                 <div style="margin: 8px 0;">
-                    Risk Assessment: 
+                    Risk Assessment:
                     <div class="progress-bar"><div class="progress-fill" id="risk-progress" style="width: 0%"></div></div>
                 </div>
                 <div style="margin: 8px 0;">
-                    Market Timing: 
+                    Market Timing:
                     <div class="progress-bar"><div class="progress-fill" id="timing-progress" style="width: 0%"></div></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charting Panel -->
+    <div id="charting-panel" class="draggable-panel">
+        <div class="panel-header">
+            <span>📊 Financial Chart</span>
+            <div class="panel-controls">
+                <div class="panel-btn minimize-btn" onclick="minimizePanel('charting-panel')">−</div>
+                <div class="panel-btn maximize-btn" onclick="maximizePanel('charting-panel')">□</div>
+                <div class="panel-btn close-btn" onclick="closePanel('charting-panel')">×</div>
+            </div>
+        </div>
+        <div class="panel-content" style="display: flex; flex-direction: column; height: 100%; padding: 0;">
+            <div id="chart-controls" style="padding: 8px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: rgba(0, 255, 136, 0.1); border-bottom: 1px solid #00ff88;">
+                <div>
+                    <button onclick="chartingSystem.setTimeframe('1h')">1H</button>
+                    <button onclick="chartingSystem.setTimeframe('1d')">1D</button>
+                    <button onclick="chartingSystem.setTimeframe('1w')">1W</button>
+                    <button onclick="chartingSystem.setTimeframe('1y')">1Y</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="password" id="chart-api-key" placeholder="Chart API Key" style="background: rgba(0,0,0,0.7); border: 1px solid #00ff88; color: #00ff88; padding: 4px; border-radius: 4px;">
+                    <button onclick="chartingSystem.connectApi()">Connect</button>
+                </div>
+                <div id="ticker" style="font-size: 18px; font-weight: bold; width: 100%; text-align: center; margin-top: 8px;">
+                    <span>BTC/USD:</span>
+                    <span id="ticker-price">--.--</span>
+                </div>
+            </div>
+            <div id="chart-container" style="flex-grow: 1;">
+                <!-- Chart will be rendered here -->
             </div>
         </div>
     </div>
@@ -764,7 +824,7 @@
                         <option value="mysql">MySQL</option>
                     </select>
                 </div>
-                
+
                 <div class="wizard-step" id="wizard-step-2">
                     <div id="connection-config">
                         <!-- Dynamic configuration based on DB type -->
@@ -772,7 +832,7 @@
                     <button onclick="testDatabaseConnection()" class="primary">🔌 Test Connection</button>
                     <button onclick="llmConfigureDatabase()" class="admin">🧠 LLM Auto-Configure</button>
                 </div>
-                
+
                 <div class="wizard-step" id="wizard-step-3">
                     <p>✅ Database connected successfully!</p>
                     <button onclick="completeDatabaseSetup()" class="primary">🚀 Complete Setup</button>
@@ -845,6 +905,28 @@
         <div class="panel-content">
             <div id="chat-log" style="height: 80px; overflow-y: auto; margin-bottom: 10px; padding: 10px; background: rgba(0, 0, 0, 0.6); border: 1px solid #004400; border-radius: 4px; font-size: 11px;"></div>
             <input type="text" id="user-input" placeholder="Ask METABOTPRIME LLM about trading, configurations, or request automated assistance..." onkeypress="handleInput(event)" style="width: 100%; background: rgba(0, 0, 0, 0.7); border: 1px solid #00ff88; color: #00ff88; padding: 8px; font-family: inherit; border-radius: 4px; font-size: 12px;">
+        </div>
+    </div>
+
+    <!-- News & Sentiment Panel -->
+    <div id="news-panel" class="draggable-panel">
+        <div class="panel-header">
+            <span>📰 News & Sentiment</span>
+            <div class="panel-controls">
+                <div class="panel-btn minimize-btn" onclick="minimizePanel('news-panel')">−</div>
+                <div class="panel-btn maximize-btn" onclick="maximizePanel('news-panel')">□</div>
+                <div class="panel-btn close-btn" onclick="closePanel('news-panel')">×</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="form-group">
+                <label>MarketAux API Key:</label>
+                <input type="password" id="marketaux-api-key" placeholder="Enter your API key">
+                <button onclick="newsSystem.fetchNews()" style="width: 100%; margin-top: 5px;">Fetch News</button>
+            </div>
+            <div id="news-content" style="margin-top: 10px; height: calc(100% - 100px); overflow-y: auto;">
+                <div style="text-align: center; color: #666;">Enter API key and fetch news...</div>
+            </div>
         </div>
     </div>
 
@@ -952,7 +1034,7 @@
     <div id="agent-config-modal" class="modal-overlay">
         <div class="modal">
             <h3>🤖 Agent Configuration Panel</h3>
-            
+
             <div id="agent-config-list">
                 <!-- Agents will be populated here -->
             </div>
@@ -990,7 +1072,7 @@
     <div id="wallet-modal" class="modal-overlay">
         <div class="modal">
             <h3>💛 Multi-Wallet Management</h3>
-            
+
             <div style="margin-bottom: 20px;">
                 <h4>🔗 Connected Wallets</h4>
                 <div id="wallet-list">
@@ -1030,11 +1112,45 @@
         </div>
     </div>
 
+    <!-- Twitch Integration Panel -->
+    <div id="twitch-panel" class="draggable-panel" style="top: 500px; left: 710px; width: 350px; height: 400px; display: none;">
+        <div class="panel-header">
+            <span>👾 Twitch Integration</span>
+            <div class="panel-controls">
+                <div class="panel-btn minimize-btn" onclick="minimizePanel('twitch-panel')">−</div>
+                <div class="panel-btn maximize-btn" onclick="maximizePanel('twitch-panel')">□</div>
+                <div class="panel-btn close-btn" onclick="closePanel('twitch-panel')">×</div>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div class="form-group">
+                <label>Twitch Channel:</label>
+                <input type="text" id="twitch-channel" placeholder="Enter channel name">
+            </div>
+            <div class="form-group">
+                <label>Bot Username:</label>
+                <input type="text" id="twitch-username" placeholder="Bot's username">
+            </div>
+            <div class="form-group">
+                <label>OAuth Token:</label>
+                <input type="password" id="twitch-oauth" placeholder="oauth:...">
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button onclick="twitchManager.connect()" class="primary" id="twitch-connect-btn">🔌 Connect</button>
+                <button onclick="twitchManager.disconnect()" class="danger" id="twitch-disconnect-btn" disabled>🔌 Disconnect</button>
+            </div>
+            <div>Status: <span id="twitch-status" style="color: #ff4444;">Disconnected</span></div>
+            <h4 style="margin-top: 15px;">Twitch Chat</h4>
+            <div id="twitch-chat-log" style="height: 150px; overflow-y: auto; margin-top: 10px; padding: 10px; background: rgba(0, 0, 0, 0.6); border: 1px solid #004400; border-radius: 4px; font-size: 11px;">
+            </div>
+        </div>
+    </div>
+
     <!-- Node Manager Modal -->
     <div id="node-modal" class="modal-overlay">
         <div class="modal">
             <h3>🌐 Node Network Manager</h3>
-            
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                 <div>
                     <h4>📊 Network Status</h4>
@@ -1089,6 +1205,52 @@
         </div>
     </div>
 
+    <!-- Exchange Configuration Wizard Modal -->
+    <div id="exchange-wizard-modal" class="modal-overlay">
+        <div class="modal">
+            <h3>🔌 Exchange API Setup Wizard</h3>
+            <div class="wizard-step active" id="exchange-wizard-step-1">
+                <h4>Step 1: Select Exchange</h4>
+                <div class="form-group">
+                    <label>Exchange:</label>
+                    <select id="exchange-select">
+                        <option value="">Choose an exchange...</option>
+                        <option value="binance">Binance</option>
+                        <option value="coinbase">Coinbase Pro</option>
+                        <option value="kucoin">KuCoin</option>
+                        <option value="kraken">Kraken</option>
+                    </select>
+                </div>
+                <button onclick="exchangeManager.nextStep(2)" class="primary">Next →</button>
+            </div>
+
+            <div class="wizard-step" id="exchange-wizard-step-2">
+                <h4>Step 2: API Credentials</h4>
+                <div class="form-group">
+                    <label>API Key:</label>
+                    <input type="text" id="exchange-api-key" placeholder="Enter your API key">
+                </div>
+                <div class="form-group">
+                    <label>API Secret:</label>
+                    <input type="password" id="exchange-api-secret" placeholder="Enter your API secret">
+                </div>
+                <button onclick="exchangeManager.nextStep(1)">← Back</button>
+                <button onclick="exchangeManager.testConnection()" class="primary">🔌 Test Connection</button>
+            </div>
+
+            <div class="wizard-step" id="exchange-wizard-step-3">
+                <h4>Step 3: Confirmation</h4>
+                <div id="exchange-test-result" style="padding: 15px; margin: 10px 0; border-radius: 6px;"></div>
+                <button onclick="exchangeManager.nextStep(2)">← Back</button>
+                <button onclick="exchangeManager.saveConnection()" class="primary" disabled id="save-exchange-btn">🚀 Save Connection</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="closeModal('exchange-wizard-modal')">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Enhanced Global State Management
         const STATE = {
@@ -1097,6 +1259,11 @@
                 accessLevel: 'user',
                 isLoggedIn: false,
                 permissions: []
+            },
+            exchange: {
+                connected: false,
+                exchange: null,
+                apiKey: null,
             },
             database: {
                 configured: false,
@@ -1168,7 +1335,7 @@
 
                 this.processingQueue.push(request);
                 this.sortQueue();
-                
+
                 if (!this.isProcessing) {
                     this.processQueue();
                 }
@@ -1185,14 +1352,14 @@
 
             async processQueue() {
                 if (this.isProcessing || this.processingQueue.length === 0) return;
-                
+
                 this.isProcessing = true;
                 STATE.llm.isProcessing = true;
                 document.getElementById('llm-status').textContent = 'Processing...';
 
                 while (this.processingQueue.length > 0) {
                     const request = this.processingQueue.shift();
-                    
+
                     try {
                         await this.executeTask(request);
                     } catch (error) {
@@ -1208,13 +1375,13 @@
             async executeTask(request) {
                 addChatMessage('llm', `🧠 Processing: ${request.task}`);
                 this.showLLMProcessing(request.task);
-                
-                const timeout = new Promise((_, reject) => 
+
+                const timeout = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('LLM timeout')), this.timeout)
                 );
 
                 const taskPromise = this.performTask(request);
-                
+
                 try {
                     const result = await Promise.race([taskPromise, timeout]);
                     request.status = 'completed';
@@ -1229,7 +1396,7 @@
 
             async performTask(request) {
                 const { task, parameters } = request;
-                
+
                 switch (task) {
                     case 'configure_database':
                         return await this.configureDatabaseTask(parameters);
@@ -1251,7 +1418,7 @@
             async configureDatabaseTask(parameters) {
                 // Simulate LLM database configuration
                 await this.delay(3000);
-                
+
                 const dbType = parameters.dbType || 'mongodb';
                 const config = {
                     mongodb: { connectionString: 'mongodb://localhost:27017/metabotprime_llm' },
@@ -1270,7 +1437,7 @@
 
             async configureWalletTask(parameters) {
                 await this.delay(2000);
-                
+
                 // Try MetaMask first, fallback to manual
                 try {
                     if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
@@ -1284,7 +1451,7 @@
                                 balance: await walletManager.getBalance(accounts[0]),
                                 lastSync: Date.now()
                             };
-                            
+
                             STATE.wallets.set(walletData.id, walletData);
                             updateWalletList();
                             addChatMessage('llm', `🧠 MetaMask wallet auto-configured: ${accounts[0].substring(0, 10)}...`);
@@ -1304,7 +1471,7 @@
                         lastSync: Date.now(),
                         note: 'Auto-configured by LLM - Update address manually'
                     };
-                    
+
                     STATE.wallets.set(manualWallet.id, manualWallet);
                     updateWalletList();
                     addChatMessage('llm', `🧠 Manual wallet created: ${manualWallet.address.substring(0, 10)}... (Update required)`);
@@ -1315,7 +1482,7 @@
 
             async optimizeAgentsTask(parameters) {
                 await this.delay(4000);
-                
+
                 let optimized = 0;
                 for (const [id, agent] of agentSystem.agents) {
                     if (agent.performance < 0.5) {
@@ -1325,36 +1492,36 @@
                         addChatMessage('llm', `🧠 Optimized agent: ${agent.name}`);
                     }
                 }
-                
+
                 agentSystem.updateAgentUI();
                 return { success: true, optimized: optimized };
             }
 
             async diagnoseSystemTask(parameters) {
                 await this.delay(3000);
-                
+
                 const issues = [];
                 const recommendations = [];
-                
+
                 // Check database
                 if (!STATE.database.configured) {
                     issues.push('Database not configured');
                     recommendations.push('Configure database for optimal performance');
                 }
-                
+
                 // Check trading system
                 if (!STATE.trading.initialized) {
                     issues.push('Trading system not initialized');
                     recommendations.push('Initialize trading system with starting capital');
                 }
-                
+
                 // Check agents
                 const lowPerformanceAgents = Array.from(agentSystem.agents.values()).filter(a => a.performance < 0.3);
                 if (lowPerformanceAgents.length > 0) {
                     issues.push(`${lowPerformanceAgents.length} agents underperforming`);
                     recommendations.push('Run agent optimization to improve performance');
                 }
-                
+
                 // Check wallets
                 if (STATE.wallets.size === 0) {
                     issues.push('No wallets configured');
@@ -1369,14 +1536,14 @@
                 };
 
                 addChatMessage('llm', `🧠 System diagnosis complete: ${diagnosis.systemHealth}% health, ${issues.length} issues found`);
-                
+
                 return diagnosis;
             }
 
             async resolveIssueTask(parameters) {
                 const { issue, action } = parameters;
                 await this.delay(2500);
-                
+
                 let resolved = false;
                 let message = '';
 
@@ -1409,7 +1576,7 @@
 
             async optimizeNodesTask(parameters) {
                 await this.delay(3500);
-                
+
                 // Simulate node optimization
                 const improvements = {
                     latencyReduction: Math.floor(Math.random() * 30) + 10,
@@ -1418,7 +1585,7 @@
                 };
 
                 addChatMessage('llm', `🧠 Node optimization complete: -${improvements.latencyReduction}ms latency, +${improvements.throughputIncrease}% throughput`);
-                
+
                 return improvements;
             }
 
@@ -1432,7 +1599,7 @@
                 } else {
                     addChatMessage('llm', `❌ Task failed after ${this.maxRetries} attempts: ${request.task}`);
                     notificationManager.show(`LLM task failed: ${request.task}`, 'error');
-                    
+
                     // Request user intervention
                     await this.requestUserIntervention(request, error);
                 }
@@ -1451,7 +1618,7 @@
                 const fallbackMessage = fallbackActions[request.task] || 'Please handle this task manually';
                 addChatMessage('system', `🔧 Manual intervention required: ${fallbackMessage}`);
                 notificationManager.show(`Manual intervention needed: ${request.task}`, 'warning', 10000);
-                
+
                 STATE.llm.fallbackMode = true;
             }
 
@@ -1489,7 +1656,7 @@
             show(message, type = 'success', duration = 5000) {
                 const messageKey = `${type}-${message}`;
                 const now = Date.now();
-                
+
                 // Check for duplicate messages
                 if (STATE.notifications.messageHistory.has(messageKey)) {
                     const lastTime = STATE.notifications.lastMessageTime.get(messageKey) || 0;
@@ -1504,7 +1671,7 @@
 
                 // Queue the message
                 this.messageQueue.push({ message, type, duration, timestamp: now });
-                
+
                 if (!this.isProcessing) {
                     this.processQueue();
                 }
@@ -1512,30 +1679,30 @@
 
             async processQueue() {
                 this.isProcessing = true;
-                
+
                 while (this.messageQueue.length > 0) {
                     const notification = this.messageQueue.shift();
                     await this.displayNotification(notification);
                     await this.delay(500); // 500ms between notifications
                 }
-                
+
                 this.isProcessing = false;
             }
 
             async displayNotification({ message, type, duration }) {
                 const notification = document.createElement('div');
                 const id = Date.now() + Math.random();
-                
+
                 notification.className = `notification ${type}`;
                 notification.textContent = message;
                 notification.dataset.id = id;
-                
+
                 this.container.appendChild(notification);
                 this.activeNotifications.set(id, notification);
 
                 // Show animation
                 setTimeout(() => notification.classList.add('show'), 100);
-                
+
                 // Auto remove
                 setTimeout(() => {
                     this.removeNotification(id);
@@ -1573,10 +1740,10 @@
             async configureDatabase(type, config) {
                 try {
                     notificationManager.show('Configuring database...', 'admin', 3000);
-                    
+
                     // Simulate connection testing
                     await this.delay(2000);
-                    
+
                     if (type === 'mongodb') {
                         await this.configureMongoDb(config);
                     } else if (type === 'postgresql') {
@@ -1584,26 +1751,26 @@
                     } else if (type === 'mysql') {
                         await this.configureMysql(config);
                     }
-                    
+
                     this.type = type;
                     this.isConfigured = true;
                     STATE.database.configured = true;
                     STATE.database.connected = true;
                     STATE.database.type = type;
-                    
+
                     this.startBackupScheduler();
                     this.enableDatabaseButtons();
-                    
+
                     addChatMessage('database', `✅ ${type.toUpperCase()} database configured successfully`);
                     notificationManager.show(`Database ${type} connected successfully!`, 'admin');
-                    
+
                     // Update UI
                     document.getElementById('db-status').textContent = 'Connected';
                     document.getElementById('db-wizard').style.display = 'none';
                     document.getElementById('db-status-section').style.display = 'block';
-                    
+
                     return true;
-                    
+
                 } catch (error) {
                     notificationManager.show(`Database connection failed: ${error.message}`, 'error');
                     addChatMessage('database', `❌ Database configuration failed: ${error.message}`);
@@ -1614,38 +1781,38 @@
             async configureMongoDb(config) {
                 const connectionString = config.connectionString || 'mongodb://localhost:27017/metabotprime';
                 addChatMessage('database', `🔌 Connecting to MongoDB: ${connectionString}`);
-                
+
                 this.connection = {
                     type: 'mongodb',
                     url: connectionString,
                     connected: true
                 };
-                
+
                 await this.initializeCollections();
             }
 
             async configurePostgreSQL(config) {
                 const connectionString = `postgresql://${config.user}:${config.password}@${config.host}:${config.port}/${config.database}`;
                 addChatMessage('database', `🔌 Connecting to PostgreSQL: ${config.host}:${config.port}`);
-                
+
                 this.connection = {
                     type: 'postgresql',
                     config: config,
                     connected: true
                 };
-                
+
                 await this.initializeTables();
             }
 
             async configureMysql(config) {
                 addChatMessage('database', `🔌 Connecting to MySQL: ${config.host}:${config.port}`);
-                
+
                 this.connection = {
                     type: 'mysql',
                     config: config,
                     connected: true
                 };
-                
+
                 await this.initializeTables();
             }
 
@@ -1673,7 +1840,7 @@
 
                 const now = Date.now();
                 const lastBackupCheck = this.updateThrottle.get('backup') || 0;
-                
+
                 if (type !== 'manual' && now - lastBackupCheck < 23000) {
                     addChatMessage('database', '⏳ Backup throttled - too recent. Aborting.');
                     return false;
@@ -1687,12 +1854,12 @@
                 try {
                     STATE.database.backupInProgress = true;
                     this.updateThrottle.set('backup', now);
-                    
+
                     notificationManager.show(`Creating ${type} backup...`, 'admin', 3000);
                     addChatMessage('database', `💾 Starting ${type} backup...`);
 
                     await this.delay(3000);
-                    
+
                     const backup = {
                         id: `backup_${Date.now()}`,
                         type: type,
@@ -1704,14 +1871,14 @@
                     STATE.database.backupCount++;
                     STATE.database.lastBackup = now;
                     STATE.database.lastUpdate = now;
-                    
+
                     this.updateDatabaseUI();
-                    
+
                     addChatMessage('database', `✅ ${type} backup completed: ${backup.id}`);
                     notificationManager.show(`${type} backup created successfully!`);
-                    
+
                     return backup;
-                    
+
                 } catch (error) {
                     addChatMessage('database', `❌ Backup failed: ${error.message}`);
                     notificationManager.show(`Backup failed: ${error.message}`, 'error');
@@ -1745,11 +1912,11 @@
                 document.getElementById('db-records').textContent = STATE.database.records.toLocaleString();
                 document.getElementById('db-size').textContent = STATE.database.size;
                 document.getElementById('backup-count').textContent = STATE.database.backupCount;
-                
+
                 if (STATE.database.lastBackup) {
                     const lastBackup = new Date(STATE.database.lastBackup).toLocaleString();
                     document.getElementById('last-backup').textContent = lastBackup;
-                    
+
                     const nextBackup = new Date(STATE.database.lastBackup + 6 * 60 * 60 * 1000).toLocaleString();
                     document.getElementById('next-backup').textContent = nextBackup;
                 }
@@ -1770,16 +1937,16 @@
 
             async initialize() {
                 if (this.initialized) return;
-                
+
                 addChatMessage('system', '🤖 Initializing multi-agent system...');
-                
+
                 await this.createAgent('ALPHA', 'Strategy Optimizer', ['pattern_recognition', 'strategy_optimization']);
                 await this.createAgent('BETA', 'Risk Manager', ['risk_assessment', 'portfolio_management']);
                 await this.createAgent('GAMMA', 'Network Monitor', ['system_monitoring', 'health_checks']);
-                
+
                 this.initialized = true;
                 this.updateAgentUI();
-                
+
                 addChatMessage('system', '✅ Multi-agent system initialized');
                 notificationManager.show('Agent system ready!');
             }
@@ -1804,14 +1971,14 @@
                 };
 
                 this.agents.set(id.toLowerCase(), agent);
-                
+
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                
+
                 agent.status = 'active';
                 agent.task = this.getInitialTask(id);
-                
+
                 addChatMessage('agent', `🤖 Agent ${id} deployed: ${name}`);
-                
+
                 return agent;
             }
 
@@ -1834,23 +2001,35 @@
 
                 try {
                     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
-                    
+
                     const improvement = Math.random() * 0.1 - 0.05;
                     agent.performance = Math.max(-1, Math.min(1, agent.performance + improvement));
                     agent.lastUpdate = Date.now();
-                    
+
                     if (Math.abs(improvement) > 0.02) {
                         const sign = improvement > 0 ? '+' : '';
                         addChatMessage('agent', `🤖 ${agent.name}: Performance change: ${sign}${(improvement * 100).toFixed(1)}%`);
                     }
-                    
+
+                    // ALPHA agent generates suggestions
+                    if (agent.id === 'alpha' && Math.random() < 0.3) { // 30% chance to make a suggestion
+                        const data = chartingSystem.data.get(chartingSystem.timeframe);
+                        if (data && data.length > 0) {
+                            const lastPoint = data[data.length - 1];
+                            const suggestionType = Math.random() > 0.5 ? 'buy' : 'sell';
+                            const reason = suggestionType === 'buy' ? 'Price broke resistance' : 'Price broke support';
+                            chartingSystem.addSuggestionMarker(lastPoint.time, lastPoint.close, suggestionType, reason);
+                            addChatMessage('agent', `🤖 ${agent.name} suggests to ${suggestionType} based on chart patterns.`);
+                        }
+                    }
+
                     agent.status = previousStatus === 'learning' ? 'learning' : 'active';
-                    
+
                 } catch (error) {
                     agent.status = 'error';
                     this.assignRepairTask(agentId, error.message);
                 }
-                
+
                 this.updateAgentUI();
             }
 
@@ -1896,9 +2075,9 @@
                 for (let i = 0; i < repairTask.steps.length; i++) {
                     repairTask.currentStep = i;
                     repairTask.status = 'in_progress';
-                    
+
                     addChatMessage('repair', `🔧 ${repairTask.agentId.toUpperCase()}: Step ${i + 1}/${repairTask.steps.length} - ${repairTask.steps[i]}`);
-                    
+
                     await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
                 }
 
@@ -1906,7 +2085,7 @@
                 if (agent) {
                     agent.status = 'active';
                     agent.repairTasks = agent.repairTasks.filter(id => id !== repairId);
-                    
+
                     addChatMessage('repair', `✅ ${agent.name} repair completed successfully`);
                     notificationManager.show(`Agent ${repairTask.agentId.toUpperCase()} repair completed!`);
                 }
@@ -1921,7 +2100,7 @@
 
                 Object.assign(agent.configuration, newConfig);
                 agent.lastUpdate = Date.now();
-                
+
                 addChatMessage('agent', `⚙️ Configuration updated for ${agent.name}`);
                 this.updateAgentUI();
                 return true;
@@ -2000,7 +2179,7 @@
 
                 // Update active agents count
                 document.getElementById('active-agents').textContent = Array.from(this.agents.values()).filter(a => a.status === 'active').length;
-                
+
                 // Update admin panel stats if visible
                 if (document.getElementById('admin-panel').style.display !== 'none') {
                     document.getElementById('admin-active-agents').textContent = this.agents.size;
@@ -2026,10 +2205,10 @@
 
             getRepairStatus(agent) {
                 if (agent.repairTasks.length === 0) return '';
-                
+
                 const activeRepair = this.repairQueue.get(agent.repairTasks[0]);
                 if (!activeRepair) return '';
-                
+
                 return `
                     <div class="repair-status">
                         <strong>🔧 Repair Status:</strong><br>
@@ -2047,6 +2226,10 @@
             constructor() {
                 this.providers = new Map();
                 this.initializeProviders();
+                this.eventHandlers = {
+                    accountsChanged: this.handleAccountsChanged.bind(this),
+                    chainChanged: this.handleChainChanged.bind(this)
+                };
             }
 
             initializeProviders() {
@@ -2061,6 +2244,83 @@
                     detect: () => typeof window.ethereum !== 'undefined' && window.ethereum.isCoinbaseWallet,
                     connect: this.connectCoinbaseWallet.bind(this)
                 });
+            }
+
+            addMetaMaskListeners() {
+                if (window.ethereum) {
+                    window.ethereum.on('accountsChanged', this.eventHandlers.accountsChanged);
+                    window.ethereum.on('chainChanged', this.eventHandlers.chainChanged);
+                }
+            }
+
+            removeMetaMaskListeners() {
+                if (window.ethereum) {
+                    window.ethereum.removeListener('accountsChanged', this.eventHandlers.accountsChanged);
+                    window.ethereum.removeListener('chainChanged', this.eventHandlers.chainChanged);
+                }
+            }
+
+            async handleAccountsChanged(accounts) {
+                if (accounts.length === 0) {
+                    addChatMessage('wallet', 'MetaMask disconnected. Please connect again.');
+                    notificationManager.show('MetaMask disconnected', 'warning');
+                    // Find and remove all metamask/coinbase wallets
+                    for (const [id, wallet] of STATE.wallets.entries()) {
+                        if (wallet.type === 'metamask' || wallet.type === 'coinbase') {
+                            this.disconnectWallet(id, true); // silent disconnect
+                        }
+                    }
+                } else {
+                    addChatMessage('wallet', `Account changed to: ${accounts[0].substring(0, 10)}...`);
+                    notificationManager.show('MetaMask account changed', 'admin');
+
+                    // Find the first metamask/coinbase wallet and update it
+                    let walletFound = false;
+                    for (const [id, wallet] of STATE.wallets.entries()) {
+                        if ((wallet.type === 'metamask' || wallet.type === 'coinbase') && !walletFound) {
+                            wallet.address = accounts[0];
+                            wallet.balance = await this.getBalance(accounts[0]);
+                            wallet.lastSync = Date.now();
+                            walletFound = true;
+                        } else if ((wallet.type === 'metamask' || wallet.type === 'coinbase') && walletFound) {
+                            // If user has multiple metamask wallets connected, remove the others
+                            STATE.wallets.delete(id);
+                        }
+                    }
+                    updateWalletList();
+                }
+            }
+
+            handleChainChanged(chainId) {
+                addChatMessage('wallet', `Network changed to: ${chainId}`);
+                notificationManager.show(`Switched to network ${chainId}`, 'admin');
+                // Update chainId for all connected web3 wallets
+                for (const wallet of STATE.wallets.values()) {
+                    if (wallet.type === 'metamask' || wallet.type === 'coinbase') {
+                        wallet.chainId = chainId;
+                        this.syncWallet(wallet.id); // Re-sync balance on new chain
+                    }
+                }
+                updateWalletList();
+            }
+
+            disconnectWallet(walletId, silent = false) {
+                const wallet = STATE.wallets.get(walletId);
+                if (wallet) {
+                    STATE.wallets.delete(walletId);
+
+                    // If this was the last web3 wallet, remove listeners
+                    const remainingWeb3Wallets = Array.from(STATE.wallets.values()).some(w => w.type === 'metamask' || w.type === 'coinbase');
+                    if (!remainingWeb3Wallets) {
+                        this.removeMetaMaskListeners();
+                    }
+
+                    if (!silent) {
+                        addChatMessage('wallet', `🔌 Wallet disconnected: ${wallet.name}`);
+                        notificationManager.show(`Wallet ${wallet.name} disconnected`);
+                    }
+                    updateWalletList();
+                }
             }
 
             async connectMetaMask() {
@@ -2117,7 +2377,7 @@
                         method: 'eth_getBalance',
                         params: [address, 'latest']
                     });
-                    
+
                     return parseFloat(parseInt(balance, 16) / Math.pow(10, 18));
                 } catch (error) {
                     addChatMessage('wallet', `⚠️ Balance retrieval failed: ${error.message}`);
@@ -2133,24 +2393,24 @@
 
                 try {
                     notificationManager.show(`Syncing ${wallet.name}...`, 'admin', 2000);
-                    
+
                     if (wallet.type === 'metamask' || wallet.type === 'coinbase') {
                         const newBalance = await this.getBalance(wallet.address);
                         wallet.balance = newBalance;
                         wallet.lastSync = Date.now();
-                        
+
                         addChatMessage('wallet', `✅ ${wallet.name} synced: ${newBalance.toFixed(4)} ETH`);
                         notificationManager.show(`${wallet.name} synced successfully!`);
                     } else {
                         throw new Error('Manual wallets cannot be synced automatically');
                     }
-                    
+
                     return wallet;
                 } catch (error) {
                     const errorMsg = `Sync failed for ${wallet.name}: ${error.message}`;
                     addChatMessage('wallet', `❌ ${errorMsg}`);
                     notificationManager.show(errorMsg, 'error');
-                    
+
                     this.suggestSolution(wallet.type, error.message);
                     throw error;
                 }
@@ -2158,7 +2418,7 @@
 
             suggestSolution(walletType, errorMessage) {
                 let suggestion = '';
-                
+
                 if (errorMessage.includes('not detected')) {
                     suggestion = `Please install ${walletType === 'metamask' ? 'MetaMask' : 'Coinbase Wallet'} browser extension`;
                 } else if (errorMessage.includes('unlock')) {
@@ -2170,9 +2430,155 @@
                 } else {
                     suggestion = 'Please check wallet settings and try reconnecting';
                 }
-                
+
                 notificationManager.show(`💡 Solution: ${suggestion}`, 'warning', 8000);
                 addChatMessage('wallet', `💡 Suggested solution: ${suggestion}`);
+            }
+        }
+
+        // Twitch Integration System
+        class TwitchManager {
+            constructor() {
+                this.client = null;
+                this.channel = '';
+            }
+
+            connect() {
+                const channel = document.getElementById('twitch-channel').value.trim();
+                const username = document.getElementById('twitch-username').value.trim();
+                const token = document.getElementById('twitch-oauth').value.trim();
+
+                if (!channel || !username || !token) {
+                    notificationManager.show('Please fill in all Twitch credentials.', 'error');
+                    return;
+                }
+
+                this.channel = channel;
+
+                const options = {
+                    options: { debug: true },
+                    identity: {
+                        username: username,
+                        password: token
+                    },
+                    channels: [channel]
+                };
+
+                this.client = new tmi.client(options);
+
+                this.client.on('message', this.onMessageHandler.bind(this));
+                this.client.on('connected', this.onConnectedHandler.bind(this));
+                this.client.on('disconnected', this.onDisconnectedHandler.bind(this));
+
+                this.client.connect().catch(err => {
+                    notificationManager.show(`Twitch connection error: ${err}`, 'error');
+                    document.getElementById('twitch-status').textContent = 'Error';
+                    document.getElementById('twitch-status').style.color = '#ff4444';
+                });
+            }
+
+            disconnect() {
+                if (this.client) {
+                    this.client.disconnect();
+                }
+            }
+
+            onConnectedHandler(addr, port) {
+                notificationManager.show(`Connected to Twitch: ${addr}:${port}`, 'admin');
+                document.getElementById('twitch-status').textContent = 'Connected';
+                document.getElementById('twitch-status').style.color = '#00ff88';
+                document.getElementById('twitch-connect-btn').disabled = true;
+                document.getElementById('twitch-disconnect-btn').disabled = false;
+                this.sendMessage(`METABOTPRIME v6.2 Connected!`);
+            }
+
+            onDisconnectedHandler(reason) {
+                notificationManager.show(`Disconnected from Twitch: ${reason || 'Unknown reason'}`, 'warning');
+                document.getElementById('twitch-status').textContent = 'Disconnected';
+                document.getElementById('twitch-status').style.color = '#ff4444';
+                document.getElementById('twitch-connect-btn').disabled = false;
+                document.getElementById('twitch-disconnect-btn').disabled = true;
+                this.client = null;
+            }
+
+            onMessageHandler(channel, userstate, message, self) {
+                if (self) return;
+
+                const chatLog = document.getElementById('twitch-chat-log');
+                const messageDiv = document.createElement('div');
+                messageDiv.innerHTML = `<span style="color: ${userstate.color || '#ffffff'}">${userstate['display-name']}:</span> ${message}`;
+                chatLog.appendChild(messageDiv);
+                chatLog.scrollTop = chatLog.scrollHeight;
+
+                // Handle commands
+                if (message.startsWith('!')) {
+                    this.handleCommand(userstate, message);
+                }
+            }
+
+            handleCommand(userstate, message) {
+                const args = message.slice(1).split(' ');
+                const command = args.shift().toLowerCase();
+
+                const isMod = userstate.mod || userstate['user-type'] === 'mod';
+                const isBroadcaster = userstate.badges && userstate.badges.broadcaster;
+                const isVIP = userstate.badges && userstate.badges.vip;
+                const hasPermission = isMod || isBroadcaster || isVIP;
+
+                if (!hasPermission) {
+                    this.sendMessage(`@${userstate['display-name']}, you do not have permission to use commands.`);
+                    return;
+                }
+
+                switch (command) {
+                    case 'autotrade':
+                        if (args[0] === 'on') {
+                            if (!STATE.trading.isAutoTrading) {
+                                toggleAutonomousTrading();
+                                this.sendMessage('🤖 Autonomous trading has been enabled.');
+                            } else {
+                                this.sendMessage('🤖 Autonomous trading is already active.');
+                            }
+                        } else if (args[0] === 'off') {
+                            if (STATE.trading.isAutoTrading) {
+                                toggleAutonomousTrading();
+                                this.sendMessage('🤖 Autonomous trading has been disabled.');
+                            } else {
+                                this.sendMessage('🤖 Autonomous trading is already inactive.');
+                            }
+                        } else {
+                            this.sendMessage('Usage: !autotrade <on|off>');
+                        }
+                        break;
+                    case 'status':
+                        const status = `
+                            System: ${document.getElementById('system-status').textContent},
+                            Capital: $${STATE.trading.capital.toFixed(2)},
+                            Trades: ${STATE.trading.totalTrades},
+                            Success: ${document.getElementById('success-rate').textContent}
+                        `;
+                        this.sendMessage(status.replace(/\s+/g, ' '));
+                        break;
+                    case 'report':
+                        reportGenerator.generateSystemReport().then(report => {
+                            const summary = `
+                                Report: ${report.title} -
+                                Health: ${report.data.systemHealth}%,
+                                LLM: ${report.data.llmStatus},
+                                Wallets: ${report.data.walletsConnected}
+                            `;
+                            this.sendMessage(summary.replace(/\s+/g, ' '));
+                        });
+                        break;
+                    default:
+                        this.sendMessage(`Unknown command: ${command}`);
+                }
+            }
+
+            sendMessage(message) {
+                if (this.client && this.client.readyState() === 'OPEN') {
+                    this.client.say(this.channel, message);
+                }
             }
         }
 
@@ -2235,7 +2641,7 @@
                     timestamp: Date.now(),
                     status: 'pending'
                 };
-                
+
                 this.pendingRequests.set(username, request);
                 return request;
             }
@@ -2318,7 +2724,7 @@
                     targetAmount: STATE.trading.target,
                     totalTrades: STATE.trading.totalTrades,
                     successfulTrades: STATE.trading.successfulTrades,
-                    successRate: STATE.trading.totalTrades > 0 ? 
+                    successRate: STATE.trading.totalTrades > 0 ?
                         ((STATE.trading.successfulTrades / STATE.trading.totalTrades) * 100).toFixed(2) + '%' : '0%',
                     isAutoTrading: STATE.trading.isAutoTrading,
                     riskLevel: document.getElementById('risk-level').value,
@@ -2331,7 +2737,7 @@
                 return {
                     totalAgents: agents.length,
                     activeAgents: agents.filter(a => a.status === 'active').length,
-                    averagePerformance: agents.length > 0 ? 
+                    averagePerformance: agents.length > 0 ?
                         ((agents.reduce((sum, a) => sum + a.performance, 0) / agents.length) * 100).toFixed(2) + '%' : '0%',
                     agentsUnderRepair: agents.filter(a => a.repairTasks.length > 0).length,
                     agentDetails: agents.map(a => ({
@@ -2347,7 +2753,7 @@
             displayReport(report) {
                 document.getElementById('report-panel').style.display = 'block';
                 const container = document.getElementById('report-content');
-                
+
                 let html = `
                     <div class="report-section">
                         <h3>${report.title}</h3>
@@ -2435,8 +2841,357 @@
             }
         }
 
+        // Enhanced Charting System
+        class ChartingSystem {
+            constructor() {
+                this.chart = null;
+                this.candlestickSeries = null;
+                this.timeframe = '1d';
+                this.data = new Map();
+                this.tickerInterval = null;
+                this.apiKey = null;
+            }
+
+            async connectApi() {
+                this.apiKey = document.getElementById('chart-api-key').value.trim();
+                if (!this.apiKey) {
+                    notificationManager.show('Please enter a Chart API key.', 'error');
+                    return;
+                }
+                notificationManager.show('Connecting to Chart Data API...', 'admin');
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                notificationManager.show('Successfully connected to Chart Data API!', 'success');
+                addChatMessage('chart', '🔌 Chart data API connected. Real-time data feed active.');
+            }
+
+            initialize() {
+                const chartContainer = document.getElementById('chart-container');
+                if (!chartContainer) return;
+
+                this.chart = LightweightCharts.createChart(chartContainer, {
+                    width: chartContainer.clientWidth,
+                    height: chartContainer.clientHeight,
+                    layout: {
+                        background: { type: 'solid', color: '#0a0a0a' },
+                        textColor: '#00ff88',
+                    },
+                    grid: {
+                        vertLines: { color: 'rgba(0, 255, 136, 0.1)' },
+                        horzLines: { color: 'rgba(0, 255, 136, 0.1)' },
+                    },
+                    timeScale: {
+                        borderColor: '#00ff88',
+                    },
+                    rightPriceScale: {
+                        borderColor: '#00ff88',
+                    },
+                });
+
+                this.candlestickSeries = this.chart.addCandlestickSeries({
+                    upColor: '#00ff88',
+                    downColor: '#ff4444',
+                    borderDownColor: '#ff4444',
+                    borderUpColor: '#00ff88',
+                    wickDownColor: '#ff4444',
+                    wickUpColor: '#00ff88',
+                });
+
+                this.generateData();
+                this.setTimeframe('1d');
+                this.startTicker();
+
+                new ResizeObserver(this.handleResize.bind(this)).observe(chartContainer);
+            }
+
+            handleResize(entries) {
+                if (entries[0]) {
+                    const { width, height } = entries[0].contentRect;
+                    this.chart.resize(width, height);
+                }
+            }
+
+            generateData() {
+                const timeframes = ['1h', '1d', '1w', '1y'];
+                timeframes.forEach(tf => {
+                    this.data.set(tf, this.generateCandlestickData(tf));
+                });
+            }
+
+            generateCandlestickData(timeframe) {
+                // =================================================================
+                // TODO: Replace this with a real API call to your data provider.
+                // This function should fetch historical candlestick data for the
+                // given timeframe and return it in the format required by
+                // lightweight-charts: { time, open, high, low, close }
+                // The 'time' should be a UNIX timestamp (seconds).
+                // Example API call:
+                // const response = await fetch(`https://your-api.com/klines?symbol=BTCUSD&interval=${timeframe}&limit=100`);
+                // const rawData = await response.json();
+                // return rawData.map(d => ({ time: d.time, open: d.open, ... }));
+                // =================================================================
+                let data = [];
+                let time = new Date();
+                let points, timeUnit, timeStep;
+
+                switch (timeframe) {
+                    case '1h':
+                        points = 60;
+                        timeUnit = 'minute';
+                        timeStep = 1;
+                        break;
+                    case '1d':
+                        points = 24;
+                        timeUnit = 'hour';
+                        timeStep = 1;
+                        break;
+                    case '1w':
+                        points = 7;
+                        timeUnit = 'day';
+                        timeStep = 1;
+                        break;
+                    case '1y':
+                        points = 52;
+                        timeUnit = 'week';
+                        timeStep = 1;
+                        break;
+                }
+
+                time.setMilliseconds(0);
+                time.setSeconds(0);
+                if (timeUnit === 'hour' || timeUnit === 'day' || timeUnit === 'week') time.setMinutes(0);
+                if (timeUnit === 'day' || timeUnit === 'week') time.setHours(0);
+                if (timeUnit === 'week') time.setDate(time.getDate() - time.getDay());
+
+
+                let price = 50000;
+                for (let i = 0; i < points; i++) {
+                    const open = price;
+                    const close = open + (Math.random() - 0.5) * 500;
+                    const high = Math.max(open, close) + Math.random() * 200;
+                    const low = Math.min(open, close) - Math.random() * 200;
+
+                    let t = new Date(time);
+                    if (timeUnit === 'minute') t.setMinutes(time.getMinutes() - (points - i) * timeStep);
+                    if (timeUnit === 'hour') t.setHours(time.getHours() - (points - i) * timeStep);
+                    if (timeUnit === 'day') t.setDate(time.getDate() - (points - i) * timeStep);
+                    if (timeUnit === 'week') t.setDate(time.getDate() - (points - i) * timeStep * 7);
+
+                    data.push({ time: t.getTime() / 1000, open, high, low, close });
+                    price = close;
+                }
+                return data;
+            }
+
+            setTimeframe(timeframe) {
+                this.timeframe = timeframe;
+                const data = this.data.get(timeframe);
+                this.candlestickSeries.setData(data);
+                this.chart.timeScale().fitContent();
+                addChatMessage('chart', `📊 Chart timeframe set to: ${timeframe.toUpperCase()}`);
+            }
+
+            startTicker() {
+                // =================================================================
+                // TODO: Replace this with a real-time data feed.
+                // This could be a WebSocket connection or periodic API polling.
+                // When a new price tick is received, you should update the
+                // ticker display and the last bar on the chart.
+                // Example using a WebSocket:
+                // const socket = new WebSocket('wss://your-data-stream.com/');
+                // socket.onmessage = (event) => {
+                //     const newTick = JSON.parse(event.data);
+                //     document.getElementById('ticker-price').textContent = newTick.price.toFixed(2);
+                //     this.candlestickSeries.update({ time: newTick.time, close: newTick.price });
+                // };
+                // =================================================================
+                if (this.tickerInterval) clearInterval(this.tickerInterval);
+                this.tickerInterval = setInterval(() => {
+                    const lastData = this.data.get(this.timeframe).slice(-1)[0];
+                    if (lastData) {
+                        const newPrice = lastData.close + (Math.random() - 0.5) * 10;
+                        document.getElementById('ticker-price').textContent = newPrice.toFixed(2);
+
+                        const lastPoint = this.data.get(this.timeframe)[this.data.get(this.timeframe).length - 1];
+                        lastPoint.close = newPrice;
+                        if (newPrice > lastPoint.high) lastPoint.high = newPrice;
+                        if (newPrice < lastPoint.low) lastPoint.low = newPrice;
+
+                        this.candlestickSeries.update(lastPoint);
+                    }
+                }, 1500);
+            }
+
+            addSuggestionMarker(time, price, type, text) {
+                const marker = {
+                    time: time,
+                    position: price > this.candlestickSeries.data().slice(-1)[0].close ? 'aboveBar' : 'belowBar',
+                    color: type === 'buy' ? '#00ff88' : '#ff4444',
+                    shape: type === 'buy' ? 'arrowUp' : 'arrowDown',
+                    text: `${type.toUpperCase()}: ${text}`
+                };
+                this.candlestickSeries.setMarkers([
+                    ...this.candlestickSeries.markers(),
+                    marker
+                ]);
+            }
+        }
+
+        // News & Sentiment System
+        class NewsSystem {
+            constructor() {
+                this.apiKey = '';
+            }
+
+            async fetchNews() {
+                this.apiKey = document.getElementById('marketaux-api-key').value.trim();
+                if (!this.apiKey) {
+                    notificationManager.show('Please enter a MarketAux API key.', 'error');
+                    return;
+                }
+
+                // =================================================================
+                // This is an example API call to MarketAux. You can customize the
+                // symbols and other parameters as needed. The user's API key is
+                // retrieved from the input field and used in the request.
+                // =================================================================
+                const url = `https://api.marketaux.com/v1/news/all?symbols=TSLA,AMZN,MSFT&filter_entities=true&language=en&api_token=${this.apiKey}`;
+                const newsContent = document.getElementById('news-content');
+                newsContent.innerHTML = '<div style="text-align: center; color: #666;">Fetching news...</div>';
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    this.displayNews(data.data);
+                    addChatMessage('news', `📰 Fetched ${data.data.length} news articles.`);
+                } catch (error) {
+                    notificationManager.show(`Failed to fetch news: ${error.message}`, 'error');
+                    newsContent.innerHTML = `<div style="text-align: center; color: #ff4444;">Failed to fetch news. Check API key and console.</div>`;
+                    addChatMessage('news', `❌ Error fetching news: ${error.message}`);
+                }
+            }
+
+            displayNews(articles) {
+                const newsContent = document.getElementById('news-content');
+                if (articles.length === 0) {
+                    newsContent.innerHTML = '<div style="text-align: center; color: #666;">No news articles found.</div>';
+                    return;
+                }
+
+                newsContent.innerHTML = articles.map(article => this.createArticleHtml(article)).join('');
+            }
+
+            createArticleHtml(article) {
+                const sentimentScore = article.entities[0]?.sentiment_score || 0;
+                const sentiment = this.getSentiment(sentimentScore);
+
+                return `
+                    <div style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.4); border-left: 3px solid ${sentiment.color}; border-radius: 4px;">
+                        <a href="${article.url}" target="_blank" style="color: #00c8ff; text-decoration: none;">${article.title}</a>
+                        <div style="font-size: 10px; color: #999; margin-top: 4px;">
+                            <span>${article.source}</span> |
+                            <span style="color: ${sentiment.color}; font-weight: bold;">${sentiment.label} (${sentimentScore.toFixed(2)})</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getSentiment(score) {
+                if (score > 0.35) return { label: 'Positive', color: '#00ff88' };
+                if (score < -0.35) return { label: 'Negative', color: '#ff4444' };
+                return { label: 'Neutral', color: '#ffaa00' };
+            }
+        }
+
+        // Exchange Management System
+        class ExchangeManager {
+            constructor() {
+                this.currentStep = 1;
+                this.connectionDetails = {};
+            }
+
+            openWizard() {
+                document.getElementById('exchange-wizard-modal').style.display = 'flex';
+                this.nextStep(1);
+            }
+
+            nextStep(step) {
+                document.querySelectorAll('#exchange-wizard-modal .wizard-step').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.getElementById(`exchange-wizard-step-${step}`).classList.add('active');
+                this.currentStep = step;
+            }
+
+            async testConnection() {
+                const exchange = document.getElementById('exchange-select').value;
+                const apiKey = document.getElementById('exchange-api-key').value.trim();
+                const apiSecret = document.getElementById('exchange-api-secret').value.trim();
+
+                if (!exchange || !apiKey || !apiSecret) {
+                    notificationManager.show('Please fill all fields.', 'error');
+                    return;
+                }
+
+                this.connectionDetails = { exchange, apiKey, apiSecret };
+                const resultDiv = document.getElementById('exchange-test-result');
+                resultDiv.innerHTML = 'Testing connection...';
+                resultDiv.style.background = 'rgba(255, 170, 0, 0.15)';
+
+                this.nextStep(3);
+
+                // =================================================================
+                // TODO: Replace this simulation with a real API call to the exchange.
+                // You would typically call a private endpoint that requires authentication,
+                // like fetching account balance or checking API key permissions.
+                // The API key and secret would be used to sign the request.
+                // Example for a Binance-like API:
+                // try {
+                //   const response = await callBinanceApi('/api/v3/account', { apiKey, apiSecret });
+                //   if (response.canTrade) {
+                //     // Success
+                //   } else {
+                //     // Failure
+                //   }
+                // } catch (error) {
+                //   // Handle connection error
+                // }
+                // =================================================================
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+
+                // Simulate success or failure
+                if (Math.random() > 0.2) { // 80% success
+                    resultDiv.innerHTML = `✅ Connection to ${exchange.toUpperCase()} successful!`;
+                    resultDiv.style.background = 'rgba(0, 255, 136, 0.15)';
+                    document.getElementById('save-exchange-btn').disabled = false;
+                } else {
+                    resultDiv.innerHTML = `❌ Connection to ${exchange.toUpperCase()} failed. Please check your credentials.`;
+                    resultDiv.style.background = 'rgba(255, 68, 68, 0.15)';
+                    document.getElementById('save-exchange-btn').disabled = true;
+                }
+            }
+
+            saveConnection() {
+                STATE.exchange = {
+                    connected: true,
+                    ...this.connectionDetails
+                };
+                document.getElementById('exchange-status').textContent = `Connected to ${this.connectionDetails.exchange.toUpperCase()}`;
+                document.getElementById('exchange-status').style.color = '#00ff88';
+                addChatMessage('exchange', `🔌 Connected to ${this.connectionDetails.exchange.toUpperCase()} exchange.`);
+                notificationManager.show(`Saved connection to ${this.connectionDetails.exchange.toUpperCase()}`, 'success');
+                closeModal('exchange-wizard-modal');
+            }
+        }
+
+        function openExchangeWizard() {
+            exchangeManager.openWizard();
+        }
+
         // Global instances
-        let dbManager, agentSystem, authSystem, notificationManager, walletManager, llmSystem, reportGenerator;
+        let dbManager, agentSystem, authSystem, notificationManager, walletManager, llmSystem, reportGenerator, twitchManager, chartingSystem, newsSystem, exchangeManager;
         let particles = [];
         let startTime = Date.now();
         let dragElement = null;
@@ -2452,15 +3207,19 @@
             agentSystem = new MultiAgentSystem();
             llmSystem = new LLMIntegration();
             reportGenerator = new ReportGenerator();
+            twitchManager = new TwitchManager();
+            chartingSystem = new ChartingSystem();
+            newsSystem = new NewsSystem();
+            exchangeManager = new ExchangeManager();
 
             // Initialize UI elements
             initializeParticles();
             setupEventListeners();
             makePanelsDraggable();
-            
+
             // Show database configuration wizard
             showDatabaseWizard();
-            
+
             STATE.system.initialized = true;
             console.log('🤖 METABOTPRIME Enhanced v6.2 initialized');
         }
@@ -2541,7 +3300,7 @@
         function completeDatabaseSetup() {
             document.getElementById('db-wizard').style.display = 'none';
             document.getElementById('db-status-section').style.display = 'block';
-            
+
             // Enable trading system now that database is ready
             enableTradingSystem();
         }
@@ -2555,12 +3314,12 @@
         function enableTradingSystem() {
             document.getElementById('auto-trade-btn').disabled = false;
             document.getElementById('auto-trade-btn').textContent = '▶️ Start Auto-Trading';
-            
+
             // Initialize with small starting capital for demo
             STATE.trading.capital = 10.00;
             STATE.trading.initialized = true;
             updateTradingUI();
-            
+
             addChatMessage('trading', '✅ Trading system ready - Demo mode with $10.00 starting capital');
         }
 
@@ -2578,7 +3337,7 @@
             try {
                 notificationManager.show('Authenticating...', 'admin', 3000);
                 const user = await authSystem.authenticateUser(username, password, accessLevel);
-                
+
                 STATE.user = {
                     ...user,
                     isLoggedIn: true
@@ -2588,7 +3347,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('menu-bar').style.display = 'flex';
                 document.getElementById('user-display').textContent = `${username} (${accessLevel})`;
-                
+
                 // Show admin menu if applicable
                 if (accessLevel === 'admin' || accessLevel === 'superadmin') {
                     document.getElementById('admin-menu').style.display = 'block';
@@ -2610,7 +3369,7 @@
         function requestAccess() {
             const username = document.getElementById('username').value.trim();
             const accessLevel = document.getElementById('access-level').value;
-            
+
             if (!username) {
                 notificationManager.show('Please enter a username', 'error');
                 return;
@@ -2619,7 +3378,7 @@
             const request = authSystem.addAccessRequest(username, accessLevel);
             notificationManager.show('Access request submitted for review', 'admin');
             addChatMessage('system', `📝 Access request from: ${username} (${accessLevel})`);
-            
+
             // Update admin panel if super admin is logged in
             if (STATE.user.accessLevel === 'superadmin') {
                 updateUserRequests();
@@ -2629,16 +3388,16 @@
         function logout() {
             STATE.user.isLoggedIn = false;
             STATE.user = { username: '', accessLevel: 'user', isLoggedIn: false, permissions: [] };
-            
+
             document.getElementById('login-screen').style.display = 'flex';
             document.getElementById('menu-bar').style.display = 'none';
             document.getElementById('admin-menu').style.display = 'none';
-            
+
             // Reset system states
             if (STATE.trading.isAutoTrading) {
                 emergencyStop();
             }
-            
+
             closeAllPanels();
             notificationManager.show('Logged out successfully');
         }
@@ -2652,29 +3411,29 @@
 
         function makeDraggable(element) {
             const header = element.querySelector('.panel-header');
-            
+
             header.addEventListener('mousedown', (e) => {
                 if (e.target.classList.contains('panel-btn')) return;
-                
+
                 dragElement = element;
                 const rect = element.getBoundingClientRect();
                 dragOffset.x = e.clientX - rect.left;
                 dragOffset.y = e.clientY - rect.top;
-                
+
                 element.style.zIndex = 1000;
                 document.addEventListener('mousemove', drag);
                 document.addEventListener('mouseup', stopDrag);
-                
+
                 e.preventDefault();
             });
         }
 
         function drag(e) {
             if (!dragElement) return;
-            
+
             const newX = e.clientX - dragOffset.x;
             const newY = e.clientY - dragOffset.y;
-            
+
             dragElement.style.left = Math.max(0, Math.min(newX, window.innerWidth - dragElement.offsetWidth)) + 'px';
             dragElement.style.top = Math.max(35, Math.min(newY, window.innerHeight - dragElement.offsetHeight)) + 'px';
         }
@@ -2693,6 +3452,12 @@
             if (panel.style.display === 'none') {
                 panel.style.display = 'block';
                 STATE.panels.minimized.delete(panelId);
+
+                if (panelId === 'charting-panel' && !chartingSystem.initialized) {
+                    chartingSystem.initialize();
+                    chartingSystem.initialized = true;
+                }
+
             } else {
                 panel.style.display = 'none';
                 STATE.panels.minimized.add(panelId);
@@ -2702,7 +3467,7 @@
         function minimizePanel(panelId) {
             const panel = document.getElementById(panelId);
             const content = panel.querySelector('.panel-content');
-            
+
             if (content.style.display === 'none') {
                 content.style.display = 'block';
                 STATE.panels.minimized.delete(panelId);
@@ -2714,7 +3479,7 @@
 
         function maximizePanel(panelId) {
             const panel = document.getElementById(panelId);
-            
+
             if (panel.style.width === '95vw') {
                 // Restore original size
                 panel.style.width = '';
@@ -2772,7 +3537,7 @@
                 report.acknowledged = true;
                 report.acknowledgedBy = STATE.user.username;
                 report.acknowledgedAt = new Date().toISOString();
-                
+
                 notificationManager.show('Report acknowledged', 'admin');
                 addChatMessage('report', `📋 Report acknowledged: ${report.title}`);
             }
@@ -2783,12 +3548,12 @@
             if (report) {
                 const dataStr = JSON.stringify(report, null, 2);
                 const dataBlob = new Blob([dataStr], {type: 'application/json'});
-                
+
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(dataBlob);
                 link.download = `${report.type}_report_${new Date().toISOString().split('T')[0]}.json`;
                 link.click();
-                
+
                 addChatMessage('report', `📤 Report exported: ${report.title}`);
                 notificationManager.show('Report exported successfully');
             }
@@ -2805,7 +3570,7 @@
                 notificationManager.show('Super Admin access required', 'error');
                 return;
             }
-            
+
             notificationManager.show('LLM optimizing agents...', 'llm', 3000);
             await llmSystem.processRequest('optimize_agents', {}, 'high');
         }
@@ -2816,7 +3581,7 @@
                 notificationManager.show('Please enter wallet name', 'error');
                 return;
             }
-            
+
             notificationManager.show('LLM configuring wallet...', 'llm', 3000);
             await llmSystem.processRequest('configure_wallet', { name: walletName }, 'high');
         }
@@ -2832,7 +3597,7 @@
                 notificationManager.show('Super Admin access required', 'error');
                 return;
             }
-            
+
             document.getElementById('agent-config-modal').style.display = 'flex';
             updateAgentConfigList();
         }
@@ -2895,7 +3660,7 @@
         function updateAgentCapabilities(agentId) {
             const capabilitiesStr = document.getElementById(`capabilities-${agentId}`).value;
             const capabilities = capabilitiesStr.split(',').map(c => c.trim()).filter(c => c.length > 0);
-            
+
             const agent = agentSystem.agents.get(agentId);
             if (agent) {
                 agent.capabilities = capabilities;
@@ -2912,7 +3677,7 @@
             if (!newCapabilities || !newCapabilities.trim()) return;
 
             const capabilities = newCapabilities.split(',').map(c => c.trim()).filter(c => c.length > 0);
-            
+
             if (agentSystem.reassignAgent(agentId, newRole.trim(), capabilities)) {
                 notificationManager.show(`Agent ${agentId.toUpperCase()} reassigned successfully`, 'admin');
                 updateAgentConfigList();
@@ -2957,7 +3722,7 @@
             agentSystem.createAgent(agentId, name, capabilities).then(() => {
                 notificationManager.show(`Agent "${name}" created successfully!`, 'admin');
                 updateAgentConfigList();
-                
+
                 // Reset form
                 document.getElementById('new-agent-name').value = '';
                 document.getElementById('new-agent-type').value = 'trading';
@@ -2974,7 +3739,7 @@
 
             STATE.trading.isAutoTrading = !STATE.trading.isAutoTrading;
             const btn = document.getElementById('auto-trade-btn');
-            
+
             if (STATE.trading.isAutoTrading) {
                 btn.innerHTML = '⏸️ Pause Auto-Trading';
                 btn.className = 'danger';
@@ -2991,7 +3756,7 @@
             STATE.trading.isAutoTrading = false;
             document.getElementById('auto-trade-btn').innerHTML = '▶️ Start Auto-Trading';
             document.getElementById('auto-trade-btn').className = 'primary';
-            
+
             addChatMessage('emergency', '🛑 EMERGENCY STOP - All trading halted');
             notificationManager.show('Emergency stop activated!', 'error');
         }
@@ -3023,12 +3788,12 @@
             const strategies = ['Momentum', 'Scalping', 'DCA', 'Grid', 'Arbitrage'];
             const strategy = strategies[Math.floor(Math.random() * strategies.length)];
             const success = Math.random() < 0.68; // 68% success rate
-            
+
             const amount = Math.min(STATE.trading.capital * 0.1, Math.random() * 5 + 1); // Max 10% of capital or $5
-            const profitRate = success ? 
+            const profitRate = success ?
                 Math.random() * 0.08 + 0.02 : // 2-10% profit
                 -(Math.random() * 0.05 + 0.01); // 1-6% loss
-                
+
             const profit = amount * profitRate;
 
             STATE.trading.totalTrades++;
@@ -3037,7 +3802,7 @@
 
             // Add to recent trades display
             updateRecentTrades(strategy, success, profit, amount);
-            
+
             if (profit > 0.5 || profit < -0.3) {
                 addChatMessage('trading', `${success ? '💹' : '📉'} ${strategy}: ${profit > 0 ? '+' : ''}${profit.toFixed(2)}`);
             }
@@ -3057,15 +3822,15 @@
                 </span><br>
                 Size: ${amount.toFixed(2)} | ${success ? 'PROFIT' : 'LOSS'}: ${profit > 0 ? '+' : ''}${profit.toFixed(2)}
             `;
-            
+
             if (tradeLog.children.length > 6) {
                 tradeLog.removeChild(tradeLog.lastChild);
             }
-            
+
             // Remove placeholder text
             const placeholder = tradeLog.querySelector('div[style*="text-align: center"]');
             if (placeholder) tradeLog.removeChild(placeholder);
-            
+
             tradeLog.insertBefore(logEntry, tradeLog.firstChild);
         }
 
@@ -3074,11 +3839,11 @@
             document.getElementById('trading-balance').textContent = STATE.trading.capital.toFixed(2);
             document.getElementById('holding-balance').textContent = STATE.trading.holdingBalance.toFixed(2);
             document.getElementById('total-trades').textContent = STATE.trading.totalTrades;
-            
-            const successRate = STATE.trading.totalTrades > 0 ? 
+
+            const successRate = STATE.trading.totalTrades > 0 ?
                 ((STATE.trading.successfulTrades / STATE.trading.totalTrades) * 100).toFixed(1) + '%' : '0%';
             document.getElementById('success-rate').textContent = successRate;
-            
+
             const progressPercent = ((STATE.trading.capital / STATE.trading.target) * 100).toFixed(1) + '%';
             document.getElementById('progress-percent').textContent = progressPercent;
         }
@@ -3145,7 +3910,7 @@
                 notificationManager.show('Super Admin access required', 'error');
                 return;
             }
-            
+
             if (confirm(`Delete agent ${agentId.toUpperCase()}? This action cannot be undone.`)) {
                 if (agentSystem.deleteAgent(agentId)) {
                     notificationManager.show(`Agent ${agentId.toUpperCase()} deleted`, 'admin');
@@ -3178,13 +3943,13 @@
             const manualFields = document.getElementById('manual-wallet-fields');
             const addBtn = document.getElementById('add-wallet-btn');
             const llmBtn = document.getElementById('llm-wallet-btn');
-            
+
             if (walletType === 'manual') {
                 manualFields.style.display = 'block';
             } else {
                 manualFields.style.display = 'none';
             }
-            
+
             addBtn.disabled = !walletType;
             llmBtn.disabled = !walletType;
         }
@@ -3215,7 +3980,7 @@
                         // Fallback to manual entry
                         addChatMessage('wallet', '⚠️ MetaMask auto-detect failed, creating manual entry');
                         notificationManager.show('MetaMask failed - created manual wallet entry', 'warning');
-                        
+
                         walletData.type = 'manual';
                         walletData.address = '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
                         walletData.note = 'Auto-generated after MetaMask failure - Please update address';
@@ -3228,7 +3993,7 @@
                         // Fallback to manual entry
                         addChatMessage('wallet', '⚠️ Coinbase Wallet auto-detect failed, creating manual entry');
                         notificationManager.show('Coinbase Wallet failed - created manual wallet entry', 'warning');
-                        
+
                         walletData.type = 'manual';
                         walletData.address = '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
                         walletData.note = 'Auto-generated after Coinbase Wallet failure - Please update address';
@@ -3245,10 +4010,10 @@
 
                 STATE.wallets.set(walletData.id, walletData);
                 updateWalletList();
-                
+
                 notificationManager.show(`Wallet "${name}" connected successfully!`);
                 addChatMessage('wallet', `💛 Connected wallet: ${name} (${walletData.type}) - ${walletData.address?.substring(0, 10)}...`);
-                
+
                 // Reset form
                 document.getElementById('wallet-type').value = '';
                 document.getElementById('wallet-name').value = '';
@@ -3256,7 +4021,7 @@
                 document.getElementById('add-wallet-btn').disabled = true;
                 document.getElementById('llm-wallet-btn').disabled = true;
                 handleWalletTypeChange();
-                
+
             } catch (error) {
                 notificationManager.show(error.message, 'error');
                 addChatMessage('wallet', `❌ Wallet connection failed: ${error.message}`);
@@ -3319,26 +4084,26 @@
             const lanNodes = Math.floor(Math.random() * 3) + 2;
             const wanNodes = Math.floor(Math.random() * 5) + 10;
             const webNodes = Math.floor(Math.random() * 10) + 40;
-            
+
             document.getElementById('lan-nodes').textContent = `${lanNodes} Active`;
             document.getElementById('wan-nodes').textContent = `${wanNodes} Active`;
             document.getElementById('web-nodes').textContent = `${webNodes} Active`;
-            
+
             const latency = Math.floor(Math.random() * 20) + 15;
             const throughput = (Math.random() * 0.5 + 0.8).toFixed(1);
-            
+
             document.getElementById('network-latency').textContent = `${latency}ms`;
             document.getElementById('network-throughput').textContent = `${throughput}GB/s`;
-            
+
             // Update load distribution
             const tradingLoad = Math.floor(Math.random() * 20) + 35;
             const learningLoad = Math.floor(Math.random() * 15) + 25;
             const processingLoad = 100 - tradingLoad - learningLoad;
-            
+
             document.getElementById('trading-load').textContent = tradingLoad;
             document.getElementById('learning-load').textContent = learningLoad;
             document.getElementById('processing-load').textContent = processingLoad;
-            
+
             document.getElementById('trading-progress').style.width = tradingLoad + '%';
             document.getElementById('learning-progress-bar').style.width = learningLoad + '%';
             document.getElementById('processing-progress').style.width = processingLoad + '%';
@@ -3347,9 +4112,9 @@
         function applyNodeConfig() {
             const priority = document.getElementById('node-priority').value;
             const distribution = document.getElementById('work-distribution').value;
-            
+
             notificationManager.show('Applying node configuration...', 'admin', 2000);
-            
+
             setTimeout(() => {
                 addChatMessage('network', `🌐 Node config applied: ${priority} priority, ${distribution} distribution`);
                 notificationManager.show('Node configuration applied successfully!');
@@ -3363,7 +4128,7 @@
                 notificationManager.show('Super Admin access required', 'error');
                 return;
             }
-            
+
             document.getElementById('admin-panel').style.display = 'block';
             document.getElementById('admin-panel').style.zIndex = '1001';
             updateUserRequests();
@@ -3372,12 +4137,12 @@
         function updateUserRequests() {
             const container = document.getElementById('user-requests');
             const requests = authSystem.getPendingRequests();
-            
+
             if (requests.length === 0) {
                 container.innerHTML = '<div style="text-align: center; color: #666;">No pending requests</div>';
                 return;
             }
-            
+
             container.innerHTML = requests.map(request => `
                 <div style="padding: 5px; border-bottom: 1px solid #333; font-size: 11px;">
                     <strong>${request.username}</strong> - ${request.accessLevel}<br>
@@ -3419,7 +4184,7 @@
             const newKey = 'MBP_' + Math.random().toString(36).substr(2, 20).toUpperCase();
             document.getElementById('master-key').textContent = newKey.substr(0, 12) + '...';
             document.getElementById('key-expiry').textContent = '30 days';
-            
+
             addChatMessage('security', `🔑 New master key generated: ${newKey.substr(0, 8)}...`);
             notificationManager.show('New master key generated', 'admin');
         }
@@ -3467,16 +4232,16 @@
         // System Health Functions
         function performSystemHealthCheck() {
             notificationManager.show('Performing comprehensive system health check...', 'admin', 3000);
-            
+
             setTimeout(() => {
                 const health = Math.floor(Math.random() * 15) + 85; // 85-100%
                 const issues = health < 95 ? Math.floor(Math.random() * 3) + 1 : 0;
-                
+
                 STATE.system.lastHealthCheck = Date.now();
-                
+
                 addChatMessage('system', `🏥 Health check complete: ${health}% system health${issues > 0 ? ` - ${issues} minor issues detected` : ' - All systems optimal'}`);
                 notificationManager.show(`System health: ${health}%${issues > 0 ? ' - Minor issues detected' : ' - Excellent!'}`, health < 90 ? 'warning' : 'success');
-                
+
                 // Auto-trigger LLM diagnosis if issues found
                 if (issues > 0 && health < 90) {
                     setTimeout(() => {
@@ -3489,12 +4254,12 @@
 
         function optimizeSystem() {
             notificationManager.show('Optimizing system performance...', 'admin', 3000);
-            
+
             setTimeout(() => {
                 const improvement = Math.floor(Math.random() * 12) + 8; // 8-20% improvement
                 addChatMessage('system', `⚡ System optimization complete: +${improvement}% performance boost`);
                 notificationManager.show(`Performance improved by ${improvement}%!`, 'success');
-                
+
                 // Update system load display
                 const newLoad = Math.max(5, parseInt(document.getElementById('system-load').textContent) - improvement);
                 document.getElementById('system-load').textContent = newLoad + '%';
@@ -3516,7 +4281,7 @@
 
         async function processUserInput(message) {
             const lowerMessage = message.toLowerCase();
-            
+
             setTimeout(async () => {
                 if (lowerMessage.includes('llm') && (lowerMessage.includes('help') || lowerMessage.includes('assist'))) {
                     addChatMessage('llm', '🧠 LLM Assistant available. Try: "llm diagnose", "llm configure database", "llm optimize agents"');
@@ -3559,7 +4324,7 @@
                         '🎯 Request acknowledged - type "llm help" for LLM commands'
                     ];
                     addChatMessage('llm', responses[Math.floor(Math.random() * responses.length)]);
-                    
+
                     // Auto-suggest LLM help for complex queries
                     if (message.length > 20) {
                         setTimeout(() => {
@@ -3573,7 +4338,7 @@
         function addChatMessage(sender, message) {
             const chatLog = document.getElementById('chat-log');
             if (!chatLog) return;
-            
+
             const messageDiv = document.createElement('div');
             const colors = {
                 'system': '#00ff88',
@@ -3590,15 +4355,15 @@
                 'llm': '#00c8ff',
                 'report': '#88ff00'
             };
-            
+
             messageDiv.innerHTML = `<span style="color: ${colors[sender] || '#ffffff'}; font-weight: bold;">[${sender.toUpperCase()}]:</span> <span style="color: #cccccc;">${message}</span>`;
             messageDiv.style.marginBottom = '3px';
             messageDiv.style.fontSize = '10px';
             messageDiv.style.padding = '2px';
-            
+
             chatLog.appendChild(messageDiv);
             chatLog.scrollTop = chatLog.scrollHeight;
-            
+
             // Keep chat history manageable
             while (chatLog.children.length > 100) {
                 chatLog.removeChild(chatLog.firstChild);
@@ -3616,7 +4381,7 @@
             const hours = Math.floor(uptime / 3600000);
             const minutes = Math.floor((uptime % 3600000) / 60000);
             const seconds = Math.floor((uptime % 60000) / 1000);
-            document.getElementById('uptime').textContent = 
+            document.getElementById('uptime').textContent =
                 `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
             // Update learning progress based on actual activity
@@ -3624,7 +4389,7 @@
                 const patternProgress = Math.min(100, STATE.trading.totalTrades * 2);
                 const riskProgress = Math.min(100, (STATE.trading.successfulTrades / Math.max(1, STATE.trading.totalTrades)) * 100);
                 const timingProgress = Math.min(100, (Date.now() - startTime) / 3600000 * 10); // 10% per hour
-                
+
                 document.getElementById('pattern-progress').style.width = patternProgress + '%';
                 document.getElementById('risk-progress').style.width = riskProgress + '%';
                 document.getElementById('timing-progress').style.width = timingProgress + '%';
@@ -3649,7 +4414,7 @@
         function initializeParticles() {
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
@@ -3731,7 +4496,7 @@
             // Keyboard shortcuts
             document.addEventListener('keydown', (event) => {
                 if (!STATE.user.isLoggedIn) return;
-                
+
                 if (event.ctrlKey || event.metaKey) {
                     switch (event.key.toLowerCase()) {
                         case 't':
@@ -3786,7 +4551,7 @@
         function startSystemLoops() {
             // Update system status every second
             setInterval(updateSystemStatus, 1000);
-            
+
             // Execute agents periodically
             setInterval(() => {
                 if (agentSystem && agentSystem.initialized) {
@@ -3811,7 +4576,7 @@
                     // Check for stuck LLM processes
                     const currentTime = Date.now();
                     const lastAction = STATE.llm.lastAction || currentTime;
-                    
+
                     if (currentTime - lastAction > STATE.llm.timeout * 2) {
                         addChatMessage('llm', '⚠️ LLM timeout detected - resetting to fallback mode');
                         STATE.llm.isProcessing = false;
@@ -3819,7 +4584,7 @@
                         notificationManager.show('LLM timeout - switched to fallback mode', 'warning');
                     }
                 }
-                
+
                 // Reset fallback mode after some time
                 if (STATE.llm.fallbackMode && Math.random() < 0.1) {
                     STATE.llm.fallbackMode = false;
@@ -3842,7 +4607,7 @@
         window.addEventListener('load', async () => {
             await initializeSystem();
             startSystemLoops();
-            
+
             // Load user preferences if available
             try {
                 const prefs = JSON.parse(localStorage.getItem('metabotprime_prefs') || '{}');
@@ -3852,7 +4617,7 @@
             } catch (e) {
                 console.log('No previous preferences found');
             }
-            
+
             // Welcome message
             setTimeout(() => {
                 addChatMessage('system', '🤖 METABOTPRIME Enhanced v6.2 initialized successfully');
