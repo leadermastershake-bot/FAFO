@@ -1,0 +1,131 @@
+.capital-summary {
+  text-align: center;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 136, 255, 0.2));
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.capital-value {
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.capital-label {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 5px;
+}
+
+.progress-section {
+  margin-bottom: 20px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #00ff88;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 5px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #0088ff);
+  transition: width 0.5s ease;
+}
+
+.trading-controls {
+  margin-bottom: 20px;
+  text-align: center;
+  border-top: 1px solid #004400;
+  padding-top: 15px;
+}
+
+.trading-controls h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid;
+}
+
+.button-group button.primary {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: #00ff88;
+  color: #00ff88;
+}
+.button-group button.primary:hover {
+  background: rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+}
+
+.button-group button.danger {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: #ff4444;
+  color: #ff4444;
+}
+.button-group button.danger:hover {
+  background: rgba(255, 68, 68, 0.3);
+  box-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+}
+
+.recent-performance {
+  border-top: 1px solid #004400;
+  padding-top: 15px;
+}
+
+.recent-performance h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.trade-log {
+  max-height: 120px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.trade-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+
+.trade-item.success {
+  background: rgba(0, 255, 136, 0.1);
+}
+.trade-item.success span:last-child {
+  color: #00ff88;
+}
+
+.trade-item.failure {
+  background: rgba(255, 68, 68, 0.1);
+}
+.trade-item.failure span:last-child {
+  color: #ff4444;
+}

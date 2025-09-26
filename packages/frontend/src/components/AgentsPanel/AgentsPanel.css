@@ -1,0 +1,67 @@
+.agent-card {
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid #004400;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.agent-card:hover {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: #00ff88;
+}
+
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.agent-details {
+  font-size: 11px;
+  padding-left: 18px; /* Align with text next to dot */
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.agent-actions {
+  margin-top: 15px;
+  border-top: 1px solid #004400;
+  padding-top: 15px;
+}
+
+.agent-actions button {
+  width: 100%;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.agent-actions button:hover {
+  background: rgba(0, 255, 136, 0.2);
+}
+
+/* Status dot styles copied from original CSS */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff3333;
+}
+
+.status-dot.active { background: #00ff88; }
+.status-dot.learning { background: #ffaa00; animation: pulse 1.5s infinite; }
+.status-dot.working { background: #0088ff; animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

@@ -1,0 +1,7 @@
+
+> metabotprime-vnext@1.0.0 dev:backend /app
+> pnpm --filter backend dev
+
+
+> backend@1.0.0 dev /app/packages/backend
+> tsx watch src/index.ts
