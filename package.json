@@ -5,8 +5,9 @@
   "description": "AI agent platform for Web3 trading and interaction",
   "main": "index.js",
   "scripts": {
-    "dev:backend": "pnpm --filter backend dev",
-    "dev:frontend": "pnpm --filter frontend dev"
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "dev:backend": "pnpm --filter server dev",
+    "dev:frontend": "pnpm --filter client start"
   },
   "keywords": [
     "react",
@@ -16,5 +17,9 @@
     "web3"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "workspaces": [
+    "client",
+    "server"
+  ]
 }

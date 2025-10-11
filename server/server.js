@@ -1,7 +1,30 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
 const app = express();
 const port = process.env.PORT || 5000;
+
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const PUBLISHED_DIR = path.join(__dirname, 'published');
+
+// Ensure directories exist
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(PUBLISHED_DIR, { recursive: true });
+
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_DIR);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // Middleware
 app.use(cors()); // Enable Cross-Origin Resource Sharing
@@ -94,6 +117,83 @@ app.post('/api/chat', (req, res) => {
   });
 });
 
+// --- Page Management Endpoints ---
+
+// Endpoint to upload a file
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  res.json({ message: 'File uploaded successfully!', file: req.file });
+});
+
+// Endpoint to get all pages
+app.get('/api/pages', (req, res) => {
+  const unpublished = fs.readdirSync(UPLOADS_DIR);
+  const published = fs.readdirSync(PUBLISHED_DIR);
+  res.json({ unpublished, published });
+});
+
+// Endpoint to get a specific page's content
+app.get('/api/page/:pageName', (req, res) => {
+  const { pageName } = req.params;
+  const unpublishedPath = path.join(UPLOADS_DIR, pageName);
+  const publishedPath = path.join(PUBLISHED_DIR, pageName);
+
+  if (fs.existsSync(unpublishedPath)) {
+    res.sendFile(unpublishedPath);
+  } else if (fs.existsSync(publishedPath)) {
+    res.sendFile(publishedPath);
+  } else {
+    res.status(404).send('Page not found');
+  }
+});
+
+// Endpoint to publish a page
+app.post('/api/publish/:pageName', (req, res) => {
+  const { pageName } = req.params;
+  const sourcePath = path.join(UPLOADS_DIR, pageName);
+  const destinationPath = path.join(PUBLISHED_DIR, pageName);
+
+  if (fs.existsSync(sourcePath)) {
+    fs.renameSync(sourcePath, destinationPath);
+    res.json({ message: 'Page published successfully!' });
+  } else {
+    res.status(404).send('Page not found in uploads');
+  }
+});
+
+// Endpoint to unpublish a page
+app.post('/api/unpublish/:pageName', (req, res) => {
+    const { pageName } = req.params;
+    const sourcePath = path.join(PUBLISHED_DIR, pageName);
+    const destinationPath = path.join(UPLOADS_DIR, pageName);
+
+    if (fs.existsSync(sourcePath)) {
+        fs.renameSync(sourcePath, destinationPath);
+        res.json({ message: 'Page unpublished successfully!' });
+    } else {
+        res.status(404).send('Page not found in published');
+    }
+});
+
+
+// Endpoint to delete a page
+app.delete('/api/pages/:pageName', (req, res) => {
+  const { pageName } = req.params;
+  const unpublishedPath = path.join(UPLOADS_DIR, pageName);
+  const publishedPath = path.join(PUBLISHED_DIR, pageName);
+
+  if (fs.existsSync(unpublishedPath)) {
+    fs.unlinkSync(unpublishedPath);
+    res.json({ message: 'Page deleted successfully from uploads!' });
+  } else if (fs.existsSync(publishedPath)) {
+    fs.unlinkSync(publishedPath);
+    res.json({ message: 'Page deleted successfully from published!' });
+  } else {
+    res.status(404).send('Page not found');
+  }
+});
+
+// Serve published pages statically
+app.use('/pages', express.static(PUBLISHED_DIR));
 
 // Start the server
 app.listen(port, () => {
