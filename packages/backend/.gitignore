@@ -6,3 +6,5 @@
 
 # Build output
 dist
+
+/src/generated/prisma

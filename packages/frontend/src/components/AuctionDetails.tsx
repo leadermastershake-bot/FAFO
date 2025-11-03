@@ -1,45 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AuctionDetails.css';
 
-// Mock data for a single auction
-const mockAuction = {
-  id: '1',
-  title: 'Rare CryptoKitty',
-  description: 'A one-of-a-kind CryptoKitty with a unique genetic sequence. It is one of only 100 ever minted.',
-  startPrice: 10,
-  endTime: new Date(Date.now() + 3600 * 1000),
-  highestBid: 12,
-  bidders: 3,
-};
+interface Bid {
+  id: string;
+  bidder: string;
+  amount: number;
+}
 
-export function AuctionDetails() {
+interface Auction {
+  id: string;
+  title: string;
+  description: string;
+  startPrice: number;
+  endTime: string;
+  bids: Bid[];
+}
+
+// This component will need to receive an auctionId as a prop
+// For now, we'll hardcode one for demonstration
+const MOCK_AUCTION_ID = "your_hardcoded_auction_id_here";
+
+export function AuctionDetails({ auctionId = MOCK_AUCTION_ID }) {
+  const [auction, setAuction] = useState<Auction | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [bidAmount, setBidAmount] = useState('');
+  const [bidMessage, setBidMessage] = useState('');
 
-  const handleBidSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch(`/api/auctions/${auctionId}?chain=ethereum`)
+      .then(res => {
+        if (!res.ok) throw new Error('This opportunity has vanished into the ether. Find another.');
+        return res.json();
+      })
+      .then(data => {
+        setAuction(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setIsLoading(false);
+      });
+  }, [auctionId]);
+
+  const handleBidSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!bidAmount || isNaN(Number(bidAmount))) {
-      alert('Please enter a valid bid amount.');
+      setBidMessage('Enter a valid bid. Fortune favors the bold, not the careless.');
       return;
     }
-    // In the future, this will submit the bid to the API
-    console.log(`Submitting bid for ${bidAmount} ETH`);
-    alert(`Your bid of ${bidAmount} ETH has been placed!`);
+
+    try {
+      const response = await fetch(`/api/auctions/${auctionId}/bids`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chain: 'ethereum',
+          bidder: '0xCurrentUser', // This will be dynamic in a real app
+          amount: parseFloat(bidAmount),
+          isEncrypted: false, // For now
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Your bid was rejected by the fates.');
+      setBidMessage(`Your bid of ${bidAmount} ETH has been accepted! May fortune smile upon you.`);
+    } catch (err: any) {
+      setBidMessage(err.message);
+    }
   };
+
+  if (isLoading) return <div className="auction-details-container">Loading auction details...</div>;
+  if (error) return <div className="auction-details-container error">{error}</div>;
+  if (!auction) return null;
+
+  const highestBid = auction.bids.length > 0 ? Math.max(...auction.bids.map(b => b.amount)) : auction.startPrice;
 
   return (
     <div className="auction-details-container">
-      <h2>{mockAuction.title}</h2>
+      <h2>{auction.title}</h2>
       <div className="auction-info">
-        <p>{mockAuction.description}</p>
+        <p>{auction.description}</p>
         <div className="details-grid">
-          <p><strong>Starting Bid:</strong> {mockAuction.startPrice} ETH</p>
-          <p><strong>Highest Bid:</strong> {mockAuction.highestBid} ETH</p>
-          <p><strong>Number of Bidders:</strong> {mockAuction.bidders}</p>
-          <p><strong>Ends In:</strong> {((mockAuction.endTime.getTime() - Date.now()) / 1000 / 60).toFixed(0)} minutes</p>
+          <p><strong>Starting Bid:</strong> {auction.startPrice} ETH</p>
+          <p><strong>Highest Bid:</strong> {highestBid} ETH</p>
+          <p><strong>Number of Bidders:</strong> {auction.bids.length}</p>
+          <p><strong>Ends In:</strong> {((new Date(auction.endTime).getTime() - Date.now()) / 1000 / 60).toFixed(0)} minutes</p>
         </div>
       </div>
       <div className="bidding-form-container">
-        <h3>Place Your Bid</h3>
+        <h3>Place Your Bid. Seize Your Destiny.</h3>
         <form onSubmit={handleBidSubmit}>
           <input
             type="text"
@@ -49,6 +98,7 @@ export function AuctionDetails() {
           />
           <button type="submit">Place Bid</button>
         </form>
+        {bidMessage && <p className="bid-message">{bidMessage}</p>}
       </div>
     </div>
   );

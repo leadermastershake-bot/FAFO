@@ -1,13 +1,8 @@
-import { Auction, AuctionStatus } from '../models/Auction';
-import { Bid, BidStatus } from '../models/Bid';
-import { InvestmentPool } from '../models/InvestmentPool';
+import { PrismaClient, Auction, Bid } from '@prisma/client';
 import { getBlockchainService } from './blockchainServiceFactory';
 import { IBlockchainService } from './IBlockchainService';
 
-// Mock in-memory storage
-const auctions: { [id: string]: Auction } = {};
-const bids: { [id: string]: Bid } = {};
-const pools: { [id: string]: InvestmentPool } = {};
+const prisma = new PrismaClient();
 
 export class AuctionService {
   private blockchainService: IBlockchainService;
@@ -16,49 +11,54 @@ export class AuctionService {
     this.blockchainService = getBlockchainService(chain);
   }
 
-  async createAuction(auctionData: Omit<Auction, 'id' | 'status' | 'bids'>): Promise<Auction> {
-    const id = `auction_${Date.now()}`;
-    const newAuction: Auction = {
-      ...auctionData,
-      id,
-      status: AuctionStatus.PENDING,
-      bids: [],
-    };
-    auctions[id] = newAuction;
+  async createAuction(auctionData: Omit<Auction, 'id'>): Promise<Auction> {
+    const newAuction = await prisma.auction.create({
+      data: {
+        ...auctionData,
+        status: 'PENDING', // Set initial status
+      },
+    });
     return newAuction;
   }
 
-  async getAuction(id: string): Promise<Auction | undefined> {
-    return auctions[id];
+  async getAuction(id: string): Promise<Auction | null> {
+    return prisma.auction.findUnique({
+      where: { id },
+      include: { bids: true }, // Include related bids
+    });
   }
 
-  async placeBid(auctionId: string, bidData: Omit<Bid, 'id' | 'auctionId' | 'timestamp' | 'status'>): Promise<Bid> {
-    const auction = auctions[auctionId];
-    if (!auction || auction.status !== AuctionStatus.ACTIVE) {
-      throw new Error('Auction is not active');
+  async placeBid(auctionId: string, bidData: Omit<Bid, 'id' | 'auctionId' | 'timestamp'>): Promise<Bid> {
+    const auction = await prisma.auction.findUnique({
+      where: { id: auctionId },
+    });
+
+    if (!auction || auction.status !== 'ACTIVE') {
+      throw new Error('Auction is not active or does not exist.');
     }
 
-    // For now, we'll assume the bid is not encrypted
-    const id = `bid_${Date.now()}`;
-    const newBid: Bid = {
-      ...bidData,
-      id,
-      auctionId,
-      timestamp: new Date(),
-      status: BidStatus.PENDING,
-    };
-
-    // Mock collateral transfer
+    // This is where the real magic happens. Your bid is your bond.
+    // We're securing your commitment on the blockchain.
     await this.blockchainService.transfer(
-      '0xMockCollateralContract', // This would be a real contract address
-      '0xMockAuctionHouseWallet', // The auction house's wallet
+      '0xYourCollateralVault', // This will be a dynamic, secure contract address
+      '0xPlatformTreasury',   // The platform's secure wallet
       bidData.amount.toString()
     );
 
-    bids[id] = newBid;
-    auction.bids.push(id);
+    const newBid = await prisma.bid.create({
+      data: {
+        ...bidData,
+        auctionId,
+        timestamp: new Date(),
+      },
+    });
+
     return newBid;
   }
 
-  // Other methods for managing auctions, bids, and pools would go here
+  async getAllAuctions(): Promise<Auction[]> {
+    return prisma.auction.findMany({
+        where: { status: 'ACTIVE' }, // Only show active auctions for now
+    });
+  }
 }

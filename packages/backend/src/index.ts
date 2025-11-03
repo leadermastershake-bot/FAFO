@@ -6,12 +6,14 @@ import { getBlockchainService } from './services/blockchainServiceFactory';
 import { IBlockchainService } from './services/IBlockchainService';
 import { AuctionService } from './services/auctionService';
 import { AIService } from './services/AIService';
+import { MongoClient } from 'mongodb';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const port = process.env.PORT || 3001;
 const aiService = new AIService();
+const envPath = path.resolve(__dirname, '../.env');
 
 app.use(express.json());
 
@@ -33,9 +35,9 @@ const withBlockchainService = (handler: (req: Request, res: Response, service: I
 
 const withAuctionService = (handler: (req: Request, res: Response, service: AuctionService) => void) => {
   return (req: Request, res: Response) => {
-    const chain = req.body.chain || req.query.chain;
-    if (!chain || typeof chain !== 'string') {
-      return res.status(400).json({ error: 'Chain identifier is required' });
+    const chain = req.body.chain || req.query.chain || 'ethereum'; // Default to ethereum for now
+    if (typeof chain !== 'string') {
+      return res.status(400).json({ error: 'Chain identifier must be a string' });
     }
     try {
       const service = new AuctionService(chain);
@@ -69,6 +71,51 @@ app.post('/api/configure', withBlockchainService((req, res, service) => {
     res.status(500).json({ error: 'Failed to update configuration' });
   }
 }));
+
+// --- Database Configuration ---
+
+app.get('/api/database/status', async (req, res) => {
+  const isConfigured = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("mongodb://localhost:27017/metabotprime");
+  res.json({ isConfigured });
+});
+
+app.post('/api/database/configure', async (req, res) => {
+  const { connectionString } = req.body;
+  if (!connectionString) {
+    return res.status(400).json({ error: 'MongoDB connection string is required' });
+  }
+
+  try {
+    // Test the connection
+    const client = new MongoClient(connectionString);
+    await client.connect();
+    await client.close();
+
+    // Save the connection string to the .env file
+    let envContent = '';
+    try {
+      envContent = await fs.readFile(envPath, 'utf-8');
+    } catch (e) {
+      // .env file might not exist yet
+    }
+
+    const lines = envContent.split('\n');
+    const dbUrlLineIndex = lines.findIndex(line => line.startsWith('DATABASE_URL='));
+    if (dbUrlLineIndex !== -1) {
+      lines[dbUrlLineIndex] = `DATABASE_URL="${connectionString}"`;
+    } else {
+      lines.push(`DATABASE_URL="${connectionString}"`);
+    }
+
+    await fs.writeFile(envPath, lines.join('\n'));
+
+    res.json({ message: 'Database configured successfully. Please restart the server.' });
+  } catch (error: any) {
+    console.error('MongoDB connection error:', error);
+    res.status(500).json({ error: 'Invalid MongoDB connection string.' });
+  }
+});
+
 
 // --- Wallet and Contract ---
 
@@ -115,6 +162,28 @@ app.post('/api/contract/transfer', withBlockchainService(async (req, res, servic
 }));
 
 // --- Auction Endpoints ---
+
+app.get('/api/auctions', withAuctionService(async (req, res, service) => {
+    try {
+        const auctions = await service.getAllAuctions();
+        res.json(auctions);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+}));
+
+app.get('/api/auctions/:auctionId', withAuctionService(async (req, res, service) => {
+    try {
+        const { auctionId } = req.params;
+        const auction = await service.getAuction(auctionId);
+        if (!auction) {
+            return res.status(404).json({ error: 'Auction not found' });
+        }
+        res.json(auction);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+}));
 
 app.post('/api/auctions', withAuctionService(async (req, res, service) => {
   try {
