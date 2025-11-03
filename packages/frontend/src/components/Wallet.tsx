@@ -19,7 +19,11 @@ export function Wallet() {
   useEffect(() => {
     async function fetchWalletStatus() {
       try {
-        const response = await fetch('/api/wallet/balance');
+        const response = await fetch('/api/wallet/balance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chain: 'ethereum' }),
+        });
         if (!response.ok) {
           const errorData: WalletError = await response.json();
           if (errorData.isConfigured === false) {

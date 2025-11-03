@@ -22,7 +22,12 @@ export function Trading() {
       const response = await fetch('/api/contract/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractAddress, spender, amount: approveAmount }),
+        body: JSON.stringify({
+          chain: 'ethereum',
+          contractAddress,
+          spender,
+          amount: approveAmount,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Approval failed');
@@ -44,7 +49,12 @@ export function Trading() {
       const response = await fetch('/api/contract/transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractAddress, to: toAddress, amount: transferAmount }),
+        body: JSON.stringify({
+          chain: 'ethereum',
+          contractAddress,
+          to: toAddress,
+          amount: transferAmount,
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Transfer failed');

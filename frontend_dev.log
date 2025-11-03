@@ -1,0 +1,13 @@
+
+> metabotprime-vnext@1.0.0 dev:frontend /app
+> pnpm --filter frontend dev
+
+
+> frontend@0.0.0 dev /app/packages/frontend
+> vite
+
+
+  VITE v7.1.6  ready in 349 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
