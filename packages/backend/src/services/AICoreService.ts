@@ -136,46 +136,68 @@ export class AICoreService {
   }
 
   async assessPortfolio(userId: string) {
-    const portfolio = await prisma.portfolio.findUnique({
-      where: { userId },
-      include: { holdings: true },
-    });
+    try {
+      const portfolio = await prisma.portfolio.findUnique({
+        where: { userId },
+        include: { holdings: true },
+      });
 
-    if (!portfolio || portfolio.holdings.length === 0) {
-      return {
-        overallAssessment: "Your portfolio is empty. An empty vault gathers no treasure. It's time to take a position.",
-        holdingAssessments: [],
-      };
-    }
-
-    const marketPrices = await this.marketDataService.getRealTimePrices();
-    const prediction: Prediction = await modelServiceClient.getPrediction({ portfolio, marketPrices });
-
-    let totalValue = 0;
-    const holdingAssessments = portfolio.holdings.map(holding => {
-      const currentValue = (marketPrices[holding.asset] || holding.averageCost) * holding.quantity;
-      totalValue += currentValue;
-
-      let suggestion = "Hold. The winds are uncertain.";
-      if (prediction.asset === holding.asset) {
-        if (prediction.predicted_price > (marketPrices[holding.asset] || 0)) {
-            suggestion = `The Oracle sees a price surge. Consider increasing your stake. Confidence: ${prediction.confidence_score}.`;
-        } else {
-            suggestion = `A storm is gathering. The Oracle suggests reducing exposure. Confidence: ${prediction.confidence_score}.`;
-        }
+      if (!portfolio || portfolio.holdings.length === 0) {
+        return {
+          overallAssessment: "Your portfolio is empty. An empty vault gathers no treasure. It's time to take a position.",
+          holdingAssessments: [],
+        };
       }
 
-      return {
-        asset: holding.asset,
-        quantity: holding.quantity,
-        currentValue: currentValue.toFixed(2),
-        suggestion,
-      };
-    });
+      const marketPrices = await this.marketDataService.getRealTimePrices();
+      const prediction: Prediction = await modelServiceClient.getPrediction({ portfolio, marketPrices });
 
-    return {
-      overallAssessment: `Your portfolio value stands at $${totalValue.toFixed(2)}. The Oracle has spoken. The path to victory is laid bare below. Act decisively.`,
-      holdingAssessments,
-    };
+      let totalValue = 0;
+      const holdingAssessments = portfolio.holdings.map(holding => {
+        const currentValue = (marketPrices[holding.asset] || holding.averageCost) * holding.quantity;
+        totalValue += currentValue;
+
+        let suggestion = "Hold. The winds are uncertain.";
+        if (prediction.asset === holding.asset) {
+          if (prediction.predicted_price > (marketPrices[holding.asset] || 0)) {
+              suggestion = `The Oracle sees a price surge. Consider increasing your stake. Confidence: ${prediction.confidence_score}.`;
+          } else {
+              suggestion = `A storm is gathering. The Oracle suggests reducing exposure. Confidence: ${prediction.confidence_score}.`;
+          }
+        }
+
+        return {
+          asset: holding.asset,
+          quantity: holding.quantity,
+          currentValue: currentValue.toFixed(2),
+          suggestion,
+        };
+      });
+
+      const assessmentResult = {
+        overallAssessment: `Your portfolio value stands at $${totalValue.toFixed(2)}. The Oracle has spoken. The path to victory is laid bare below. Act decisively.`,
+        holdingAssessments,
+      };
+
+      await prisma.aIAction.create({
+        data: {
+          userId,
+          type: 'PORTFOLIO_ASSESSMENT',
+          requestPayload: { portfolio },
+          responsePayload: assessmentResult,
+        },
+      });
+
+      return assessmentResult;
+    } catch (error: any) {
+      await prisma.systemErrorLog.create({
+        data: {
+          service: 'AICoreService',
+          error: error.message,
+          context: { userId, method: 'assessPortfolio' },
+        },
+      });
+      throw new Error('Failed to assess portfolio.');
+    }
   }
 }

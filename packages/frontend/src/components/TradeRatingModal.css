@@ -1,0 +1,49 @@
+.rating-modal {
+    background-color: #1a1a2e;
+    border: 1px solid #00ffdd;
+    color: #e0e0e0;
+    max-width: 500px;
+    text-align: center;
+}
+
+.rating-modal h3 {
+    color: #00ffdd;
+    text-transform: uppercase;
+}
+
+.final-score {
+    margin: 2rem auto;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #162447;
+    border: 5px solid #00ffdd;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.final-score p {
+    margin: 0;
+    font-size: 1rem;
+    color: #a0a0a0;
+}
+
+.final-score span {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #00ffdd;
+}
+
+.rating-breakdown, .scenarios {
+    text-align: left;
+    margin-top: 2rem;
+}
+
+.rating-breakdown h4, .scenarios h4 {
+    border-bottom: 1px solid #2a3b68;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    color: #00c9b7;
+}

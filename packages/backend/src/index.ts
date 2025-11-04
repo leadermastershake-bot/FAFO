@@ -9,6 +9,8 @@ import { AIService } from './services/AIService';
 import { AICoreService } from './services/AICoreService';
 import { MongoClient } from 'mongodb';
 import portfolioRoutes from './routes/portfolio.routes';
+import feedbackRoutes from './routes/feedback.routes';
+import tradeRoutes from './routes/trade.routes';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -209,6 +211,12 @@ app.post('/api/auctions/:auctionId/bids', withAuctionService(async (req, res, se
 
 // --- Portfolio Endpoints ---
 app.use('/api/portfolio', portfolioRoutes);
+
+// --- Feedback Endpoints ---
+app.use('/api/feedback', feedbackRoutes);
+
+// --- Trade Endpoints ---
+app.use('/api/trades', tradeRoutes);
 
 // --- AI Endpoints ---
 

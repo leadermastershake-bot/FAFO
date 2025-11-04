@@ -1,0 +1,76 @@
+.trade-history-container {
+    padding: 2rem;
+    background-color: #1a1a2e;
+    border-radius: 8px;
+    color: #e0e0e0;
+    max-width: 1200px;
+    margin: 2rem auto;
+}
+
+h3 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #00ffdd;
+}
+
+.trades-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.trades-table th,
+.trades-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #2a3b68;
+    text-align: left;
+}
+
+.trades-table th {
+    background-color: #1f4287;
+}
+
+.trades-table tbody tr:hover {
+    background-color: #27496d;
+}
+
+.status-open {
+    color: #ffc107;
+}
+
+.status-closed {
+    color: #6c757d;
+}
+
+.profit {
+    color: #28a745;
+}
+
+.loss {
+    color: #dc3545;
+}
+
+.btn-close-trade, .btn-view-rating {
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-close-trade {
+    background-color: #e94560;
+    color: white;
+}
+
+.btn-close-trade:hover {
+    background-color: #c7344e;
+}
+
+.btn-view-rating {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-view-rating:hover {
+    background-color: #0056b3;
+}

@@ -16,6 +16,7 @@ model User {
   name      String?
   bids      Bid[]
   portfolio Portfolio?
+  actions   AIAction[]
 }
 
 model Portfolio {
@@ -61,4 +62,66 @@ model InvestmentPool {
   auctionId   String        @db.ObjectId
   members     Json
   totalAmount Float
+}
+
+// --- AI Control Schema ---
+
+enum AIActionType {
+  PORTFOLIO_ASSESSMENT
+  TRADE_SUGGESTION
+  DAILY_BRIEF
+}
+
+model AIAction {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String         @db.ObjectId
+  user         User           @relation(fields: [userId], references: [id])
+  type         AIActionType
+  timestamp    DateTime       @default(now())
+  requestPayload Json
+  responsePayload Json
+  feedback     UserFeedback?
+  executedTrade ExecutedTrade?
+}
+
+enum FeedbackType {
+  POSITIVE
+  NEGATIVE
+}
+
+model UserFeedback {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  actionId   String       @unique @db.ObjectId
+  action     AIAction     @relation(fields: [actionId], references: [id])
+  type       FeedbackType
+  comment    String?
+  timestamp  DateTime     @default(now())
+}
+
+enum TradeStatus {
+  OPEN
+  CLOSED
+}
+
+model ExecutedTrade {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  actionId          String      @unique @db.ObjectId
+  action            AIAction    @relation(fields: [actionId], references: [id])
+  status            TradeStatus
+  asset             String
+  quantity          Float
+  entryPrice        Float
+  exitPrice         Float?
+  entryTimestamp    DateTime    @default(now())
+  exitTimestamp     DateTime?
+  profitAndLoss     Float?
+  performanceScore  Float?
+}
+
+model SystemErrorLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  timestamp   DateTime @default(now())
+  service     String // e.g., 'AICoreService', 'ModelService'
+  error       String
+  context     Json?
 }
