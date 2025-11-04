@@ -7,11 +7,14 @@ import { AuctionHouse } from './components/AuctionHouse'
 import { AuctionDetails } from './components/AuctionDetails'
 import { DatabaseWizard } from './components/DatabaseWizard'
 import { AITradeSuggestions } from './components/AITradeSuggestions'
+import { AIPersonalizationWizard } from './components/AIPersonalizationWizard'
+import { AIDailyBrief } from './components/AIDailyBrief'
 
-type View = 'trading' | 'auction-house' | 'auction-details' | 'ai-suggestions';
+type View = 'trading' | 'auction-house' | 'auction-details' | 'ai-suggestions' | 'daily-brief';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('auction-house');
+  const [showAIPersonalization, setShowAIPersonalization] = useState(false);
 
   const renderView = () => {
     switch (currentView) {
@@ -21,6 +24,8 @@ function App() {
         return <AuctionDetails />;
       case 'ai-suggestions':
         return <AITradeSuggestions />;
+      case 'daily-brief':
+        return <AIDailyBrief />;
       case 'trading':
       default:
         return <Trading />;
@@ -29,6 +34,7 @@ function App() {
 
   return (
     <div className="app-container">
+      {showAIPersonalization && <AIPersonalizationWizard />}
       <DatabaseWizard />
       <SetupWizard />
       <header className="app-header">
@@ -37,7 +43,9 @@ function App() {
           <button onClick={() => setCurrentView('auction-house')}>Auction House</button>
           <button onClick={() => setCurrentView('auction-details')}>Auction Details</button>
           <button onClick={() => setCurrentView('ai-suggestions')}>AI Suggestions</button>
+          <button onClick={() => setCurrentView('daily-brief')}>Your Daily Brief</button>
           <button onClick={() => setCurrentView('trading')}>Trading</button>
+          <button onClick={() => setShowAIPersonalization(true)}>Personalize AI</button>
         </nav>
       </header>
       <main className="app-main">

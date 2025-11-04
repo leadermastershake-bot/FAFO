@@ -1,0 +1,51 @@
+.daily-brief-container {
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.daily-brief-container h2 {
+  font-size: 1.8rem;
+  color: #6a11cb;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.summary {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.insights-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.insight-card {
+  background-color: #f4f7fc;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.insight-card h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.4rem;
+}
+
+.confidence-meter {
+  background-color: #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.confidence-level {
+  background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+  color: #fff;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+}

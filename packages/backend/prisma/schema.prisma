@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  email String @unique
+  name  String?
+  bids  Bid[]
+}
+
 model Auction {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -25,7 +32,8 @@ model Bid {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   auctionId   String   @db.ObjectId
   auction     Auction  @relation(fields: [auctionId], references: [id])
-  bidder      String
+  bidderId    String   @db.ObjectId
+  bidder      User     @relation(fields: [bidderId], references: [id])
   amount      Float
   timestamp   DateTime
   isEncrypted Boolean

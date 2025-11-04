@@ -1,0 +1,36 @@
+.ai-wizard h2 {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+}
+
+.ai-wizard .options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.ai-wizard .options-grid button {
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  background: #f4f7fc;
+  border: 2px solid #e2e8f0;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.ai-wizard .options-grid button:hover {
+  background: #6a11cb;
+  color: #fff;
+  border-color: #6a11cb;
+  transform: translateY(-5px);
+}
+
+.ai-wizard input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+}

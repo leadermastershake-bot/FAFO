@@ -6,6 +6,7 @@ import { getBlockchainService } from './services/blockchainServiceFactory';
 import { IBlockchainService } from './services/IBlockchainService';
 import { AuctionService } from './services/auctionService';
 import { AIService } from './services/AIService';
+import { AICoreService } from './services/AICoreService';
 import { MongoClient } from 'mongodb';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -13,6 +14,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const port = process.env.PORT || 3001;
 const aiService = new AIService();
+const aiCoreService = new AICoreService();
 const envPath = path.resolve(__dirname, '../.env');
 
 app.use(express.json());
@@ -75,7 +77,7 @@ app.post('/api/configure', withBlockchainService((req, res, service) => {
 // --- Database Configuration ---
 
 app.get('/api/database/status', async (req, res) => {
-  const isConfigured = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("mongodb://localhost:27017/metabotprime");
+  const isConfigured = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("placeholder");
   res.json({ isConfigured });
 });
 
@@ -199,8 +201,7 @@ app.post('/api/auctions/:auctionId/bids', withAuctionService(async (req, res, se
     const { auctionId } = req.params;
     const bid = await service.placeBid(auctionId, req.body);
     res.status(201).json(bid);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error: any)_res.status(500).json({ error: error.message });
   }
 }));
 
@@ -210,6 +211,15 @@ app.post('/api/ai/trade-suggestions', async (req, res) => {
   try {
     const suggestions = await aiService.getTradeSuggestions(req.body);
     res.json(suggestions);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/ai/daily-brief', async (req, res) => {
+  try {
+    const brief = await aiCoreService.getPersonalizedBrief(req.body);
+    res.json(brief);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
