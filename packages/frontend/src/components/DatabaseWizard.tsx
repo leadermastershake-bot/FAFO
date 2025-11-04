@@ -9,15 +9,31 @@ export function DatabaseWizard() {
   const [showWizard, setShowWizard] = useState(false);
 
   useEffect(() => {
+    console.log("DatabaseWizard: Mounting component and checking status...");
     // Check the database status when the component mounts
     fetch('/api/database/status')
-      .then(res => res.json())
+      .then(res => {
+        console.log("DatabaseWizard: Received response from /api/database/status", res);
+        if (!res.ok) {
+            throw new Error(`API returned status ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
+        console.log("DatabaseWizard: Parsed status data:", data);
         if (data.isConfigured) {
+          console.log("DatabaseWizard: Database is configured. Hiding wizard.");
           setIsConfigured(true);
+          setShowWizard(false);
         } else {
+          console.log("DatabaseWizard: Database is NOT configured. Showing wizard.");
           setShowWizard(true);
         }
+      })
+      .catch(err => {
+          console.error("DatabaseWizard: Failed to fetch database status:", err);
+          setError("Could not connect to the backend. Is the server running?");
+          setShowWizard(true); // Show the wizard with an error if the backend is down
       });
   }, []);
 
@@ -25,6 +41,7 @@ export function DatabaseWizard() {
     e.preventDefault();
     setError('');
     setMessage('');
+    console.log("DatabaseWizard: Attempting to configure database...");
 
     try {
       const response = await fetch('/api/database/configure', {
@@ -33,20 +50,25 @@ export function DatabaseWizard() {
         body: JSON.stringify({ connectionString }),
       });
 
+      console.log("DatabaseWizard: Received response from /api/database/configure", response);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Configuration failed');
 
+      console.log("DatabaseWizard: Configuration successful.");
       setMessage('Configuration successful! Please restart the server to apply the changes.');
       setShowWizard(false);
     } catch (err: any) {
+      console.error("DatabaseWizard: Configuration failed:", err);
       setError(err.message);
     }
   };
 
   if (!showWizard) {
+    console.log("DatabaseWizard: Not rendering wizard because showWizard is false.");
     return null; // Don't render anything if configured or not yet checked
   }
 
+  console.log("DatabaseWizard: Rendering wizard...");
   return (
     <div className="wizard-overlay">
       <div className="wizard-container">
