@@ -8,6 +8,7 @@ import { AuctionService } from './services/auctionService';
 import { AIService } from './services/AIService';
 import { AICoreService } from './services/AICoreService';
 import { MongoClient } from 'mongodb';
+import portfolioRoutes from './routes/portfolio.routes';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -201,9 +202,13 @@ app.post('/api/auctions/:auctionId/bids', withAuctionService(async (req, res, se
     const { auctionId } = req.params;
     const bid = await service.placeBid(auctionId, req.body);
     res.status(201).json(bid);
-  } catch (error: any)_res.status(500).json({ error: error.message });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 }));
+
+// --- Portfolio Endpoints ---
+app.use('/api/portfolio', portfolioRoutes);
 
 // --- AI Endpoints ---
 

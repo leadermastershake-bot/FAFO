@@ -1,23 +1,49 @@
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
+import cron from 'node-cron';
 
 const prisma = new PrismaClient();
 
-// A sophisticated mock of our future BitNet model
-const mockBitNetModel = {
-  analyze: async (data: any) => {
-    console.log("AI Model: Analyzing data...", data);
-    // In the future, this will be a call to our self-hosted BitNet model
-    return {
-      sentiment: 'Bullish',
-      confidence: 0.85,
-      suggestedAction: 'BUY',
-    };
+interface Prediction {
+  asset: string;
+  predicted_price: number;
+  confidence_score: number;
+  time_horizon: string;
+  model_name: string;
+}
+
+const modelServiceClient = {
+  getPrediction: async (data: any): Promise<Prediction> => {
+    try {
+      const response = await axios.post('http://localhost:5001/predict', data);
+      console.log("AI Model Service responded:", response.data);
+      return response.data as Prediction;
+    } catch (error: any) {
+      console.error("Error communicating with the Model Service for prediction:", error);
+      return {
+        asset: 'BTC',
+        predicted_price: 69000.0,
+        confidence_score: 0.75,
+        time_horizon: '24 hours',
+        model_name: 'BitNet_Fallback_v0.1'
+      };
+    }
   },
+  train: async (data: any) => {
+    try {
+      const response = await axios.post('http://localhost:5001/train', data);
+      console.log("AI Model Service training response:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("Error communicating with the Model Service for training:", error);
+      return { status: 'failed', error: error.message };
+    }
+  }
 };
 
 // The AI's sense of the market
 class MarketDataService {
-  async getRealTimePrices() {
+  async getRealTimePrices(): Promise<{ [key: string]: number }> {
     // In the future, this will connect to a real-time market data API
     return {
       BTC: 65000,
@@ -46,6 +72,30 @@ export class AICoreService {
     // The AI awakens. It begins its eternal vigil, watching the market,
     // learning from every trade, every headline, every shift in sentiment.
     this.beginRealTimeLearning();
+    this.scheduleTrainingEpochs();
+  }
+
+  private scheduleTrainingEpochs() {
+    // Simulate daily, weekly, monthly epochs. For now, we run it every minute.
+    cron.schedule('* * * * *', async () => {
+      console.log('Epoch Engine: Kicking off scheduled training cycle...');
+
+      // 1. Gather training data
+      const auctions = await prisma.auction.findMany({ where: { status: 'CLOSED' }});
+      const portfolios = await prisma.portfolio.findMany({ include: { holdings: true }});
+      const headlines = await this.newsService.getLatestHeadlines();
+
+      const trainingPayload = {
+        timestamp: new Date().toISOString(),
+        dataType: 'simulated_market_snapshot',
+        auctions,
+        portfolios,
+        headlines,
+      };
+
+      // 2. Send to the Model Service for training
+      await modelServiceClient.train(trainingPayload);
+    });
   }
 
   private beginRealTimeLearning() {
@@ -56,13 +106,13 @@ export class AICoreService {
       const marketPrices = await this.marketDataService.getRealTimePrices();
       const headlines = await this.newsService.getLatestHeadlines();
 
-      const analysis = await mockBitNetModel.analyze({
+      const prediction = await modelServiceClient.getPrediction({
         auctions,
         marketPrices,
         headlines,
       });
 
-      console.log("AI Core: Incremental learning cycle complete. Analysis:", analysis);
+      console.log("AI Core: Incremental learning cycle complete. Prediction:", prediction);
     }, 10000); // Learn every 10 seconds for now
   }
 
@@ -82,6 +132,50 @@ export class AICoreService {
       ],
       marketData: marketPrices,
       newsHeadlines: headlines,
+    };
+  }
+
+  async assessPortfolio(userId: string) {
+    const portfolio = await prisma.portfolio.findUnique({
+      where: { userId },
+      include: { holdings: true },
+    });
+
+    if (!portfolio || portfolio.holdings.length === 0) {
+      return {
+        overallAssessment: "Your portfolio is empty. An empty vault gathers no treasure. It's time to take a position.",
+        holdingAssessments: [],
+      };
+    }
+
+    const marketPrices = await this.marketDataService.getRealTimePrices();
+    const prediction: Prediction = await modelServiceClient.getPrediction({ portfolio, marketPrices });
+
+    let totalValue = 0;
+    const holdingAssessments = portfolio.holdings.map(holding => {
+      const currentValue = (marketPrices[holding.asset] || holding.averageCost) * holding.quantity;
+      totalValue += currentValue;
+
+      let suggestion = "Hold. The winds are uncertain.";
+      if (prediction.asset === holding.asset) {
+        if (prediction.predicted_price > (marketPrices[holding.asset] || 0)) {
+            suggestion = `The Oracle sees a price surge. Consider increasing your stake. Confidence: ${prediction.confidence_score}.`;
+        } else {
+            suggestion = `A storm is gathering. The Oracle suggests reducing exposure. Confidence: ${prediction.confidence_score}.`;
+        }
+      }
+
+      return {
+        asset: holding.asset,
+        quantity: holding.quantity,
+        currentValue: currentValue.toFixed(2),
+        suggestion,
+      };
+    });
+
+    return {
+      overallAssessment: `Your portfolio value stands at $${totalValue.toFixed(2)}. The Oracle has spoken. The path to victory is laid bare below. Act decisively.`,
+      holdingAssessments,
     };
   }
 }

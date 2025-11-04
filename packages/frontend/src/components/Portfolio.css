@@ -1,0 +1,102 @@
+.portfolio-container {
+    padding: 2rem;
+    background-color: #1a1a2e;
+    border-radius: 8px;
+    color: #e0e0e0;
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #00ffdd;
+}
+
+.portfolio-summary {
+    margin-bottom: 2rem;
+    text-align: right;
+    padding: 1rem;
+    background-color: #162447;
+    border-radius: 6px;
+}
+
+.holdings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+
+.holdings-table th,
+.holdings-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #2a3b68;
+    text-align: left;
+}
+
+.holdings-table th {
+    background-color: #1f4287;
+    color: #e0e0e0;
+}
+
+.holdings-table tbody tr:hover {
+    background-color: #27496d;
+}
+
+.btn-remove {
+    background-color: #e94560;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-remove:hover {
+    background-color: #c7344e;
+}
+
+.btn-add-new {
+    background-color: #00ffdd;
+    color: #1a1a2e;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: block;
+    margin: 0 auto;
+    transition: background-color 0.2s;
+}
+
+.btn-add-new:hover {
+    background-color: #00c9b7;
+}
+
+.portfolio-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-assess {
+    background-color: #ffc107;
+    color: #1a1a2e;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-assess:hover {
+    background-color: #e0a800;
+}
+
+.error {
+    color: #e94560;
+    text-align: center;
+}

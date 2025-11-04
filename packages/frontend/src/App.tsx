@@ -9,8 +9,9 @@ import { DatabaseWizard } from './components/DatabaseWizard'
 import { AITradeSuggestions } from './components/AITradeSuggestions'
 import { AIPersonalizationWizard } from './components/AIPersonalizationWizard'
 import { AIDailyBrief } from './components/AIDailyBrief'
+import Portfolio from './components/Portfolio'
 
-type View = 'trading' | 'auction-house' | 'auction-details' | 'ai-suggestions' | 'daily-brief';
+type View = 'trading' | 'auction-house' | 'auction-details' | 'ai-suggestions' | 'daily-brief' | 'portfolio';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('auction-house');
@@ -26,6 +27,8 @@ function App() {
         return <AITradeSuggestions />;
       case 'daily-brief':
         return <AIDailyBrief />;
+      case 'portfolio':
+        return <Portfolio />;
       case 'trading':
       default:
         return <Trading />;
@@ -44,6 +47,7 @@ function App() {
           <button onClick={() => setCurrentView('auction-details')}>Auction Details</button>
           <button onClick={() => setCurrentView('ai-suggestions')}>AI Suggestions</button>
           <button onClick={() => setCurrentView('daily-brief')}>Your Daily Brief</button>
+          <button onClick={() => setCurrentView('portfolio')}>Portfolio</button>
           <button onClick={() => setCurrentView('trading')}>Trading</button>
           <button onClick={() => setShowAIPersonalization(true)}>Personalize AI</button>
         </nav>
