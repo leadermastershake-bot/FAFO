@@ -47,7 +47,12 @@ export function DatabaseWizard() {
 
       console.log("DatabaseWizard: Configuration successful.");
       setMessage('Success! The server is restarting with your new configuration. This window will close shortly.');
-      setTimeout(() => setShowWizard(false), 5000); // Hide wizard after 5 seconds
+      setTimeout(() => {
+        setShowWizard(false);
+        // We can't actually restart the server from here, but we can reload the page
+        // to re-check the status after a delay.
+        window.location.reload();
+      }, 5000);
     } catch (err: any) {
       console.error("DatabaseWizard: Configuration failed:", err);
       setError(err.message);

@@ -1,5 +1,3 @@
 
 > metabotprime-vnext@1.0.0 dev:backend /app
 > pnpm --filter backend dev
-
-None of the selected packages has a "dev" script
