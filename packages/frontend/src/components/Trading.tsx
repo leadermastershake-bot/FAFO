@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import './Trading.css';
+import { Chart } from './Chart';
 
 export function Trading() {
+  const [coinId, setCoinId] = useState('ethereum'); // Default to Ethereum
   const [contractAddress, setContractAddress] = useState('');
   const [spender, setSpender] = useState('');
   const [approveAmount, setApproveAmount] = useState('');
@@ -58,7 +60,22 @@ export function Trading() {
 
   return (
     <div className="trading-container">
-      <h2>ERC20 Token Trading</h2>
+      <h2>Advanced Trading</h2>
+
+      <div className="form-group">
+        <label htmlFor="coinId">CoinGecko Coin ID</label>
+        <input
+          id="coinId"
+          type="text"
+          value={coinId}
+          onChange={(e) => setCoinId(e.target.value)}
+          placeholder="e.g., bitcoin"
+        />
+      </div>
+
+      {coinId && <Chart coinId={coinId} />}
+
+      <h3>ERC20 Token Actions</h3>
       <div className="form-group">
         <label htmlFor="contractAddress">Token Contract Address</label>
         <input

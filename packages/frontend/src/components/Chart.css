@@ -1,0 +1,30 @@
+.chart-component {
+  margin-bottom: 2rem;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.chart-controls {
+  margin-bottom: 1rem;
+}
+
+.chart-controls button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+}
+
+.chart-controls button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.chart-container {
+  width: 100%;
+  height: 300px;
+}

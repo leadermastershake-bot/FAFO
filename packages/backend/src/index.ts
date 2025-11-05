@@ -3,6 +3,7 @@ import express from 'express';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ethersService from './ethersService';
+import * as coingeckoService from './coingeckoService';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -79,6 +80,28 @@ app.post('/api/contract/transfer', async (req, res) => {
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
+});
+
+// --- Market Data ---
+
+app.get('/api/market/chart', async (req, res) => {
+  const { coinId, days } = req.query;
+
+  if (!coinId || typeof coinId !== 'string') {
+    return res.status(400).json({ error: 'coinId is required' });
+  }
+
+  const daysParam = parseInt(days as string, 10);
+  if (isNaN(daysParam) || daysParam <= 0) {
+    return res.status(400).json({ error: 'A valid number of days is required' });
+  }
+
+  try {
+    const data = await coingeckoService.getMarketChart(coinId, daysParam);
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 
