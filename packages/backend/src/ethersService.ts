@@ -29,9 +29,12 @@ function initializeService() {
 }
 
 // Initial setup
-initializeService();
+// initializeService(); // Defer initialization to prevent startup hangs
 
 export function getStatus() {
+  if (!isConfigured) {
+    initializeService();
+  }
   return {
     isConfigured: isConfigured,
     address: isConfigured ? wallet.address : null

@@ -3,6 +3,7 @@ import express from 'express';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ethersService from './ethersService';
+import { aiCoreService } from './AICoreService';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -76,6 +77,34 @@ app.post('/api/contract/transfer', async (req, res) => {
     try {
         const txHash = await ethersService.transfer(contractAddress, to, amount);
         res.json({ message: 'Transfer successful', txHash });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- AI Core Service ---
+
+app.post('/api/trade-suggestion', async (req, res) => {
+    const { marketData } = req.body;
+    if (!marketData) {
+        return res.status(400).json({ error: 'marketData is required' });
+    }
+    try {
+        const suggestion = await aiCoreService.getTradeSuggestion(marketData);
+        res.json(suggestion);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/validate-action', async (req, res) => {
+    const { actionDetails } = req.body;
+    if (!actionDetails) {
+        return res.status(400).json({ error: 'actionDetails are required' });
+    }
+    try {
+        const validation = await aiCoreService.validateAction(actionDetails);
+        res.json(validation);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
