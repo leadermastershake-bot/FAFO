@@ -1,63 +1,46 @@
 import { useState, useEffect } from 'react';
+import { useWeb3 } from '../contexts/Web3Provider';
+import { ethers } from 'ethers';
 import './Wallet.css';
 
-interface WalletStatus {
-  address: string;
-  balance: string;
-}
-
-interface WalletError {
-  error: string;
-  isConfigured: boolean;
-}
-
 export function Wallet() {
-  const [status, setStatus] = useState<WalletStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isConnected, address, provider, connectWallet, disconnectWallet } = useWeb3();
+  const [balance, setBalance] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchWalletStatus() {
-      try {
-        const response = await fetch('/api/wallet/balance');
-        if (!response.ok) {
-          const errorData: WalletError = await response.json();
-          if (errorData.isConfigured === false) {
-            setError('Backend is not configured.');
-          } else {
-            throw new Error(errorData.error || 'Failed to fetch wallet status.');
-          }
-          return;
+    async function fetchBalance() {
+      if (isConnected && provider && address) {
+        try {
+          const balanceWei = await provider.getBalance(address);
+          setBalance(ethers.formatEther(balanceWei));
+        } catch (error) {
+          console.error("Failed to fetch balance:", error);
+          setBalance(null);
         }
-        const data: WalletStatus = await response.json();
-        setStatus(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+      } else {
+        setBalance(null);
       }
     }
-    fetchWalletStatus();
-  }, []);
-
-  if (isLoading) {
-    return <div className="wallet-container">Loading wallet...</div>;
-  }
-
-  if (error) {
-    return <div className="wallet-container error">{error}</div>;
-  }
+    fetchBalance();
+  }, [isConnected, provider, address]);
 
   return (
     <div className="wallet-container">
-      <h3>Server Wallet</h3>
-      {status ? (
-        <>
-          <p><strong>Address:</strong> {status.address}</p>
-          <p><strong>Balance:</strong> {parseFloat(status.balance).toFixed(4)} ETH</p>
-        </>
+      <h3>Your Wallet</h3>
+      {isConnected && address ? (
+        <div>
+          <p><strong>Status:</strong> Connected</p>
+          <p><strong>Address:</strong> {address}</p>
+          {balance !== null && (
+            <p><strong>Balance:</strong> {parseFloat(balance).toFixed(4)} ETH</p>
+          )}
+          <button onClick={disconnectWallet}>Disconnect</button>
+        </div>
       ) : (
-        <p>No wallet information available.</p>
+        <div>
+          <p><strong>Status:</strong> Disconnected</p>
+          <button onClick={connectWallet}>Connect Wallet</button>
+        </div>
       )}
     </div>
   );

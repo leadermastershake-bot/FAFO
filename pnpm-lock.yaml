@@ -35,6 +35,9 @@ importers:
 
   packages/frontend:
     dependencies:
+      ethers:
+        specifier: ^6.15.0
+        version: 6.15.0
       lightweight-charts:
         specifier: ^5.0.9
         version: 5.0.9

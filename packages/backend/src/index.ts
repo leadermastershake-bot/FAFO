@@ -39,48 +39,7 @@ app.post('/api/configure', async (req, res) => {
   }
 });
 
-// --- Wallet and Contract ---
-
-app.get('/api/wallet/balance', async (req, res) => {
-  try {
-    const balance = await ethersService.getBalance();
-    res.json({
-      address: ethersService.getWallet().address,
-      balance: balance
-    });
-  } catch (error: any) {
-    if (error.message === 'Service not configured') {
-      return res.status(409).json({ error: error.message, isConfigured: false });
-    }
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/contract/approve', async (req, res) => {
-    const { contractAddress, spender, amount } = req.body;
-    if (!contractAddress || !spender || !amount) {
-        return res.status(400).json({ error: 'contractAddress, spender, and amount are required' });
-    }
-    try {
-        const txHash = await ethersService.approve(contractAddress, spender, amount);
-        res.json({ message: 'Approval successful', txHash });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/contract/transfer', async (req, res) => {
-    const { contractAddress, to, amount } = req.body;
-    if (!contractAddress || !to || !amount) {
-        return res.status(400).json({ error: 'contractAddress, to, and amount are required' });
-    }
-    try {
-        const txHash = await ethersService.transfer(contractAddress, to, amount);
-        res.json({ message: 'Transfer successful', txHash });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// --- Wallet and Contract --- (DEPRECATED: Client-side handling)
 
 // --- Market Data ---
 
