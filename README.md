@@ -14,62 +14,28 @@ Think of it as a digital séance where the ghost in the machine is a hyper-intel
 
 Here's a glimpse of the firepower you'll be wielding:
 
-*   **AI-Powered Trade Analysis:** Our backend, a finely-tuned engine of market prediction, crunches the numbers so you don't have to. It's like having a tiny, caffeinated economist living in your computer.
+*   **Server-Side Wallet Management:** A secure, backend-controlled wallet for executing transactions.
+*   **ERC20 Token Control:** A simple interface for approving and transferring ERC20 tokens.
 *   **Multi-Chain Compatibility:** We speak fluent Ethereum, with more dialects to come. Our platform is designed to be blockchain-agnostic, because monogamy is overrated in the crypto world.
-*   **Community-Based Trading:** Why go it alone? Join forces with other traders, participate in auction-style trades, and leverage the power of the collective. It's like a potluck, but for money.
 *   **Sleek, Modern Frontend:** Our user interface, built with the magic of React and Vite, is so clean you could eat off of it. (Please don't.)
 
-### Usage
+### Roadmap Features
 
-1.  **Connect Your Wallet:** (Coming Soon!) This is where the magic begins.
-2.  **Browse Auctions:** See what the community is cooking up.
-3.  **Consult the Oracle:** Get AI-driven insights on potential trades.
-4.  **Place Your Bid:** Join an auction and put your crypto where your mouth is.
+*   **AI-Powered Trade Analysis:** Our sentient market partner is still in training, but soon it will be providing deep insights into the market.
+*   **Community-Based Trading:** The auction house is under construction. Soon you'll be able to join forces with other traders.
 
 ## Deployment (a.k.a. Assembling the Golem)
 
-Ready to spin up your own instance of Metabointprime-vNext? Of course you are. Here's the drill:
+Ready to spin up your own instance of Metabointprime-vNext? Of course you are. For detailed, step-by-step instructions, consult our official guide:
 
-### Prerequisites
-
-*   Node.js (v18 or higher)
-*   pnpm
-*   A burning desire to question the financial status quo
-
-### Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/metabotprime-vnext.git
-    cd metabotprime-vnext
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    pnpm install
-    ```
-
-3.  **Configure your environment:**
-    *   You'll need to set up a `.env` file in the `packages/backend` directory. We're not going to tell you what to put in it... yet. That's part of the initiation. (Just kidding. You'll need `RPC_URL` and `PRIVATE_KEY` for Web3 functionality.)
-
-4.  **Run the development servers:**
-    *   **Frontend:**
-        ```bash
-        pnpm dev:frontend
-        ```
-    *   **Backend:**
-        ```bash
-        pnpm dev:backend
-        ```
-
-Now, open your browser and navigate to `http://localhost:5173` (or whatever port Vite decides to bless you with). Behold, your very own slice of the future.
+**[>> DEPLOYMENT.md <<](DEPLOYMENT.md)**
 
 ## Technical Specifications (a.k.a. The Guts of the Beast)
 
 *   **Monorepo:** Managed with pnpm workspaces.
 *   **Frontend:** React, Vite, TypeScript
 *   **Backend:** Node.js, Express, TypeScript, ethers.js
-*   **Database:** MongoDB (via Prisma)
+*   **Database:** MongoDB (via Prisma) - *Coming Soon*
 *   **AI/ML:** Python, Flask (in a separate service, because our AI needs its own room)
 
 ## Placeholders for Fun Items to Be Added Later
