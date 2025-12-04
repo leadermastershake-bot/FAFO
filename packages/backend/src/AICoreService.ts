@@ -1,8 +1,8 @@
 // AICoreService.ts
 import axios from 'axios';
 
-// The base URL for the Python model-service
-const MODEL_SERVICE_BASE_URL = 'http://localhost:5001';
+// The base URL for the Python model-service, configurable via environment variables
+const MODEL_SERVICE_BASE_URL = process.env.MODEL_SERVICE_BASE_URL || 'http://localhost:5001';
 
 class AICoreService {
   /**
