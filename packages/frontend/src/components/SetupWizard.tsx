@@ -6,7 +6,7 @@ interface Status {
   address: string | null;
 }
 
-export function SetupWizard() {
+export function SetupWizard({ onConfigurationSuccess }) {
   const [isConfigured, setIsConfigured] = useState(true);
   const [rpcUrl, setRpcUrl] = useState('');
   const [privateKey, setPrivateKey] = useState('');
@@ -48,8 +48,7 @@ export function SetupWizard() {
       const result = await response.json();
       if (result.status.isConfigured) {
         setIsConfigured(true);
-        // Reload the page to apply the new configuration
-        window.location.reload();
+        onConfigurationSuccess();
       } else {
         throw new Error('Configuration was not successful. Please check your credentials.');
       }
