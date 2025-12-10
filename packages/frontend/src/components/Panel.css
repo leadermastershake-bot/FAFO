@@ -1,0 +1,55 @@
+.draggable-panel {
+    position: absolute;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #00ff88;
+    border-radius: 8px;
+    backdrop-filter: blur(15px);
+    resize: both;
+    overflow: auto;
+    min-width: 250px;
+    min-height: 200px;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.panel-header {
+    background: rgba(0, 255, 136, 0.2);
+    padding: 8px 12px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #00ff88;
+}
+
+.panel-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.panel-btn {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-weight: bold;
+}
+
+.minimize-btn { background: #ffaa00; }
+.maximize-btn { background: #00ff88; }
+.close-btn { background: #ff4444; }
+
+.panel-content {
+    padding: 15px;
+    height: calc(100% - 35px);
+    overflow-y: auto;
+}
+
+.draggable-panel.minimized .panel-content {
+    display: none;
+}

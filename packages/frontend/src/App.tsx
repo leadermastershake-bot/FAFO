@@ -1,32 +1,56 @@
-import './App.css'
-import { SetupWizard } from './components/SetupWizard'
-import { Wallet } from './components/Wallet'
-import { Trading } from './components/Trading'
+import { useState } from 'react';
+import './App.css';
+import { LoginScreen } from './components/LoginScreen';
+import { MenuBar } from './components/MenuBar';
+import { SystemStatusPanel } from './components/SystemStatusPanel';
+import { TradingDashboardPanel } from './components/TradingDashboardPanel';
+import { ChatPanel } from './components/ChatPanel';
+import { ChartingPanel } from './components/ChartingPanel';
+import { MultiAgentSystemPanel } from './components/MultiAgentSystemPanel';
 
 function App() {
+  const [user, setUser] = useState<{ username: string; accessLevel: string } | null>(null);
+  const [visiblePanels, setVisiblePanels] = useState<{ [key: string]: boolean }>({
+    system: true,
+    trading: true,
+    chat: true,
+    chart: true,
+    agents: true,
+  });
+
+  const handleLogin = (username: string, accessLevel: string) => {
+    setUser({ username, accessLevel });
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  const handleTogglePanel = (panelId: string) => {
+    setVisiblePanels(prev => ({ ...prev, [panelId]: !prev[panelId] }));
+  };
+
+  if (!user) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
   return (
     <div className="app-container">
-      <SetupWizard />
-      <header className="app-header">
-        <h1>METABOTPRIME vNext</h1>
-        <nav>
-          <span>Dashboard</span>
-          <span>Agents</span>
-          <span>Wallets</span>
-          <span>Settings</span>
-        </nav>
-      </header>
+      <MenuBar
+        username={user.username}
+        accessLevel={user.accessLevel}
+        onTogglePanel={handleTogglePanel}
+        onLogout={handleLogout}
+      />
       <main className="app-main">
-        <Wallet />
-        <Trading />
-        {/* The main content of the application will go here */}
-        <p>Welcome to the future of AI-powered trading.</p>
+        {visiblePanels.system && <SystemStatusPanel onClose={() => handleTogglePanel('system')} />}
+        {visiblePanels.trading && <TradingDashboardPanel onClose={() => handleTogglePanel('trading')} />}
+        {visiblePanels.chat && <ChatPanel onClose={() => handleTogglePanel('chat')} />}
+        {visiblePanels.chart && <ChartingPanel onClose={() => handleTogglePanel('chart')} />}
+        {visiblePanels.agents && <MultiAgentSystemPanel onClose={() => handleTogglePanel('agents')} />}
       </main>
-      <footer className="app-footer">
-        <p>Status: Connected</p>
-      </footer>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
