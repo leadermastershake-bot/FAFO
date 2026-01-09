@@ -1,32 +1,26 @@
-import './App.css'
-import { SetupWizard } from './components/SetupWizard'
-import { Wallet } from './components/Wallet'
-import { Trading } from './components/Trading'
+import { useState } from 'react';
+import './App.css';
+import { LoginScreen } from './components/LoginScreen';
+import { DashboardLayout } from './components/DashboardLayout';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<string | null>(null);
+
+  const handleLogin = (username: string) => {
+    setUser(username);
+    setIsAuthenticated(true);
+  };
+
   return (
     <div className="app-container">
-      <SetupWizard />
-      <header className="app-header">
-        <h1>METABOTPRIME vNext</h1>
-        <nav>
-          <span>Dashboard</span>
-          <span>Agents</span>
-          <span>Wallets</span>
-          <span>Settings</span>
-        </nav>
-      </header>
-      <main className="app-main">
-        <Wallet />
-        <Trading />
-        {/* The main content of the application will go here */}
-        <p>Welcome to the future of AI-powered trading.</p>
-      </main>
-      <footer className="app-footer">
-        <p>Status: Connected</p>
-      </footer>
+      {!isAuthenticated ? (
+        <LoginScreen onLogin={handleLogin} />
+      ) : (
+        <DashboardLayout />
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

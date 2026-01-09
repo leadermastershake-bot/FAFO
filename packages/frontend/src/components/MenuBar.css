@@ -1,0 +1,42 @@
+.menu-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 35px;
+    background: rgba(0, 0, 0, 0.95);
+    border-bottom: 1px solid #00ff88;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    gap: 15px;
+    font-family: 'Courier New', monospace;
+    color: #00ff88;
+}
+
+.menu-brand {
+    font-weight: bold;
+}
+
+.menu-item {
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.menu-item:hover {
+    background: rgba(0, 255, 136, 0.2);
+}
+
+.menu-item.admin {
+    color: #ff00ff;
+}
+
+.menu-separator {
+    width: 1px;
+    height: 20px;
+    background: #00ff88;
+}

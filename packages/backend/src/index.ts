@@ -3,6 +3,8 @@ import express from 'express';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ethersService from './ethersService';
+import prisma from './prismaService';
+import * as agentService from './agentService';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -21,6 +23,17 @@ app.get('/api/status', (req, res) => {
   res.json(ethersService.getStatus());
 });
 
+app.get('/api/db-health', async (req, res) => {
+  try {
+    await prisma.$connect();
+    res.json({ status: 'ok' });
+  } catch (error: any) {
+    res.status(500).json({ status: 'error', message: error.message });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
 app.post('/api/configure', async (req, res) => {
   const { rpcUrl, privateKey } = req.body;
   if (!rpcUrl || !privateKey) {
@@ -35,6 +48,43 @@ app.post('/api/configure', async (req, res) => {
   } catch (error: any) {
     console.error('Error writing to .env file:', error);
     res.status(500).json({ error: 'Failed to update configuration' });
+  }
+});
+
+// --- Agent Endpoints ---
+
+app.get('/api/agents', async (req, res) => {
+  // NOTE: In a real app, we'd get the userId from an authenticated session
+  const { user } = await agentService.getOrCreateDefaultUserAndWallet();
+  try {
+    const agents = await agentService.getAgents(user.id);
+    res.json(agents);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/agents', async (req, res) => {
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Agent name is required' });
+  }
+  // NOTE: In a real app, we'd get the userId from an authenticated session
+  const { user } = await agentService.getOrCreateDefaultUserAndWallet();
+  try {
+    const newAgent = await agentService.createAgent(name, user.id);
+    res.status(201).json(newAgent);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/trades', async (req, res) => {
+  try {
+    const trades = await agentService.getRecentTrades(50); // Get last 50 trades
+    res.json(trades);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -84,4 +134,8 @@ app.post('/api/contract/transfer', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
+
+  // Start the agent simulation loop
+  setInterval(agentService.runAgentSimulation, 30000); // Run every 30 seconds
+  agentService.runAgentSimulation(); // Run once on startup
 });
