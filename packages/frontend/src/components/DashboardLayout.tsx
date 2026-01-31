@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MenuBar } from './MenuBar';
 import { DraggablePanel } from './DraggablePanel';
 import { AgentsPanel } from './AgentsPanel';
+import { DatabaseWizard } from './DatabaseWizard';
 
 // --- Placeholder Panel Content ---
 
@@ -14,6 +15,9 @@ const PlaceholderContent: React.FC<{ title: string }> = ({ title }) => (
 
 
 export const DashboardLayout: React.FC = () => {
+  const [dbStatus, setDbStatus] = useState<'connected' | 'disconnected' | 'unknown'>('unknown');
+  const [isConfiguring, setIsConfiguring] = useState(false);
+
   const [panels, setPanels] = useState({
     system: { isOpen: false },
     trading: { isOpen: true }, // Open by default
@@ -31,9 +35,52 @@ export const DashboardLayout: React.FC = () => {
     }));
   };
 
+  const checkStatus = async () => {
+    try {
+      const response = await fetch('/api/status');
+      const data = await response.json();
+      setDbStatus(data.dbStatus || 'disconnected');
+      return data.dbStatus === 'connected';
+    } catch (error) {
+      console.error('Failed to fetch status:', error);
+      setDbStatus('disconnected');
+      return false;
+    }
+  };
+
+  const handleConfigureDatabase = async (databaseUrl: string) => {
+    setIsConfiguring(true);
+    try {
+      await fetch('/api/configure/database', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ databaseUrl }),
+      });
+
+      // Poll for the connection to be established
+      let isConnected = false;
+      for (let i = 0; i < 10; i++) { // Poll for up to 10 seconds
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        isConnected = await checkStatus();
+        if (isConnected) break;
+      }
+
+    } finally {
+      setIsConfiguring(false);
+    }
+  };
+
+  React.useEffect(() => {
+    checkStatus();
+  }, []);
+
   return (
     <div className="dashboard-layout">
       <MenuBar onTogglePanel={togglePanel} />
+
+      {dbStatus === 'disconnected' && (
+        <DatabaseWizard onConfigure={handleConfigureDatabase} isLoading={isConfiguring} />
+      )}
 
       <main className="dashboard-main">
         {/* Render all the panels. The DraggablePanel component will handle visibility. */}

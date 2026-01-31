@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as ethersService from './ethersService';
 import prisma from './prismaService';
 import * as agentService from './agentService';
+import { getDbStatus, checkDbConnection } from './dbStatus';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -20,7 +21,9 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/status', (req, res) => {
-  res.json(ethersService.getStatus());
+  const ethersStatus = ethersService.getStatus();
+  const dbStatus = getDbStatus();
+  res.json({ ...ethersStatus, ...dbStatus });
 });
 
 app.get('/api/db-health', async (req, res) => {
@@ -48,6 +51,49 @@ app.post('/api/configure', async (req, res) => {
   } catch (error: any) {
     console.error('Error writing to .env file:', error);
     res.status(500).json({ error: 'Failed to update configuration' });
+  }
+});
+
+app.post('/api/configure/database', async (req, res) => {
+  const { databaseUrl } = req.body;
+  if (!databaseUrl) {
+    return res.status(400).json({ error: 'databaseUrl is required' });
+  }
+  try {
+    const envPath = path.resolve(__dirname, '../.env');
+    // Read the existing .env file
+    let envContent = '';
+    try {
+      envContent = await fs.readFile(envPath, 'utf-8');
+    } catch (e) {
+      // .env file might not exist, that's fine
+    }
+
+    // Update the DATABASE_URL
+    const lines = envContent.split('\n');
+    let dbUrlSet = false;
+    const newLines = lines.map(line => {
+      if (line.startsWith('DATABASE_URL=')) {
+        dbUrlSet = true;
+        return `DATABASE_URL="${databaseUrl}"`;
+      }
+      return line;
+    });
+
+    if (!dbUrlSet) {
+      newLines.push(`DATABASE_URL="${databaseUrl}"`);
+    }
+
+    await fs.writeFile(envPath, newLines.join('\n'));
+
+    // Re-check the database connection
+    await checkDbConnection();
+
+    res.json({ message: 'Database configuration updated successfully' });
+
+  } catch (error: any) {
+    console.error('Error writing to .env file:', error);
+    res.status(500).json({ error: 'Failed to update database configuration' });
   }
 });
 
@@ -137,5 +183,4 @@ app.listen(port, () => {
 
   // Start the agent simulation loop
   setInterval(agentService.runAgentSimulation, 30000); // Run every 30 seconds
-  agentService.runAgentSimulation(); // Run once on startup
 });

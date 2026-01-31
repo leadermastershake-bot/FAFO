@@ -1,4 +1,5 @@
 import prisma from './prismaService';
+import { getDbStatus } from './dbStatus';
 
 // --- Types and Interfaces ---
 
@@ -144,6 +145,11 @@ export const getAgents = async (userId: string) => {
  * Simulates a trading cycle for all active agents.
  */
 export const runAgentSimulation = async () => {
+  if (getDbStatus().dbStatus !== 'connected') {
+    console.log('Database not connected. Skipping agent simulation.');
+    return;
+  }
+
   console.log('Running agent simulation...');
   const { user, wallet } = await getOrCreateDefaultUserAndWallet();
 
