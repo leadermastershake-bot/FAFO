@@ -3,6 +3,9 @@ import express from 'express';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ethersService from './ethersService';
+import prisma, { checkDatabaseConnection } from './prismaService';
+import * as agentService from './agentService';
+import * as marketService from './marketService';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -19,6 +22,51 @@ app.get('/', (req, res) => {
 
 app.get('/api/status', (req, res) => {
   res.json(ethersService.getStatus());
+});
+
+app.get('/api/db-health', async (req, res) => {
+  const isAlive = await checkDatabaseConnection();
+  if (isAlive) {
+    res.json({ status: 'connected' });
+  } else {
+    res.status(503).json({ status: 'disconnected' });
+  }
+});
+
+app.get('/api/agents', async (req, res) => {
+  try {
+    const agents = await agentService.getAgents();
+    res.json(agents);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/agents', async (req, res) => {
+  try {
+    const agent = await agentService.createAgent(req.body);
+    res.json(agent);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/trades', async (req, res) => {
+  try {
+    const trades = await agentService.getTrades();
+    res.json(trades);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/market', async (req, res) => {
+  try {
+    const data = await marketService.getMarketData();
+    res.json(data);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post('/api/configure', async (req, res) => {
@@ -42,10 +90,12 @@ app.post('/api/configure', async (req, res) => {
 
 app.get('/api/wallet/balance', async (req, res) => {
   try {
-    const balance = await ethersService.getBalance();
+    const chain = (req.query.chain as string) || 'ethereum';
+    const balance = await ethersService.getBalance(chain);
     res.json({
       address: ethersService.getWallet().address,
-      balance: balance
+      balance: balance,
+      chain
     });
   } catch (error: any) {
     if (error.message === 'Service not configured') {
@@ -56,12 +106,12 @@ app.get('/api/wallet/balance', async (req, res) => {
 });
 
 app.post('/api/contract/approve', async (req, res) => {
-    const { contractAddress, spender, amount } = req.body;
+    const { contractAddress, spender, amount, chain } = req.body;
     if (!contractAddress || !spender || !amount) {
         return res.status(400).json({ error: 'contractAddress, spender, and amount are required' });
     }
     try {
-        const txHash = await ethersService.approve(contractAddress, spender, amount);
+        const txHash = await ethersService.approve(contractAddress, spender, amount, chain || 'ethereum');
         res.json({ message: 'Approval successful', txHash });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -69,12 +119,12 @@ app.post('/api/contract/approve', async (req, res) => {
 });
 
 app.post('/api/contract/transfer', async (req, res) => {
-    const { contractAddress, to, amount } = req.body;
+    const { contractAddress, to, amount, chain } = req.body;
     if (!contractAddress || !to || !amount) {
         return res.status(400).json({ error: 'contractAddress, to, and amount are required' });
     }
     try {
-        const txHash = await ethersService.transfer(contractAddress, to, amount);
+        const txHash = await ethersService.transfer(contractAddress, to, amount, chain || 'ethereum');
         res.json({ message: 'Transfer successful', txHash });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -82,6 +132,20 @@ app.post('/api/contract/transfer', async (req, res) => {
 });
 
 
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`Server listening at http://localhost:${port}`);
+
+  // Initialize agents and simulation
+  try {
+    await agentService.initializeAgents();
+    setInterval(async () => {
+      try {
+        await agentService.simulateTrading();
+      } catch (err) {
+        console.error('Simulation error:', err);
+      }
+    }, 60000); // Run simulation every minute
+  } catch (err) {
+    console.error('Failed to initialize agents:', err);
+  }
 });

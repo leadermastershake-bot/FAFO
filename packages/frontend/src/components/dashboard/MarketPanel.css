@@ -1,0 +1,38 @@
+.market-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.market-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.market-id {
+  font-weight: bold;
+  color: #888;
+}
+
+.market-price {
+  font-size: 1.1rem;
+}
+
+.market-change.up { color: #00ff88; }
+.market-change.down { color: #ff4444; }
