@@ -23,7 +23,20 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/status', (req, res) => {
-  res.json(ethersService.getStatus());
+  const ethersStatus = ethersService.getStatus();
+  const dbStatus = getDbStatus();
+  res.json({ ...ethersStatus, ...dbStatus });
+});
+
+app.get('/api/db-health', async (req, res) => {
+  try {
+    await prisma.$connect();
+    res.json({ status: 'ok' });
+  } catch (error: any) {
+    res.status(500).json({ status: 'error', message: error.message });
+  } finally {
+    await prisma.$disconnect();
+  }
 });
 
 app.post('/api/configure', async (req: any, res: any) => {

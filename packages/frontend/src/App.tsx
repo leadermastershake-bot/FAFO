@@ -101,7 +101,7 @@ function App() {
         </ErrorBoundary>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
