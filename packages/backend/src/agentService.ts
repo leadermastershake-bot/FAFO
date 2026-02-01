@@ -1,226 +1,142 @@
-import prisma from './prismaService';
-import { getDbStatus } from './dbStatus';
+import prisma, { checkDatabaseConnection } from './prismaService';
 
-// --- Types and Interfaces ---
-
-interface TradeExplanation {
-  positive: string[];
-  negative: string[];
-  neutral: string[];
+export interface AgentData {
+  id: string;
+  name: string;
+  status: string;
+  performance: number;
+  capabilities: string[];
 }
 
-// --- Constants ---
+export interface TradeData {
+  id: string;
+  symbol: string;
+  side: string;
+  amount: number;
+  price: number;
+  timestamp: Date;
+  agentId?: string;
+  xaiReason?: string;
+}
 
-const STRATEGIES = ['Momentum', 'Scalping', 'Mean Reversion', 'Arbitrage'];
-const ASSETS = ['BTC', 'ETH', 'SOL', 'DOGE', 'ADA'];
-const TRADE_EXPLANATIONS: { [key: string]: TradeExplanation } = {
-  Momentum: {
-    positive: [
-      "Asset broke a key resistance level, signaling strong upward momentum.",
-      "MACD crossover combined with high volume confirms a bullish trend.",
-      "Price is trading above the 50-day and 200-day moving averages."
-    ],
-    negative: [
-      "Failed to break resistance and is showing signs of a reversal.",
-      "Volume is decreasing, suggesting the current trend is losing steam."
-    ],
-    neutral: [
-      "Asset is consolidating within a range, waiting for a clear breakout."
-    ]
-  },
-  Scalping: {
-    positive: [
-      "Identified a small, short-term price anomaly on the 1-minute chart.",
-      "High-frequency indicators suggest a brief upward price movement."
-    ],
-    negative: [
-      "The bid-ask spread widened, making this scalp unprofitable.",
-      "Detected a 'spoofing' order on the books, indicating a false signal."
-    ],
-    neutral: [
-      "Market volatility is too low for profitable scalping at the moment."
-    ]
-  },
-  'Mean Reversion': {
-    positive: [
-      "Asset is trading significantly below its 20-day moving average, suggesting it's oversold.",
-      "RSI dropped below 30, indicating a potential bounce is imminent."
-    ],
-    negative: [
-      "The asset continues to trend downwards, ignoring oversold signals.",
-      "A negative news event is overriding the statistical mean."
-    ],
-    neutral: [
-      "Asset is trading close to its historical mean, no clear signal."
-    ]
-  },
-  Arbitrage: {
-    positive: [
-      "Detected a price discrepancy for the asset between two exchanges.",
-      "Successfully executed a triangular arbitrage opportunity with three related assets."
-    ],
-    negative: [
-      "The price gap closed before the second leg of the trade could be executed.",
-      "High network fees on one of the chains made the arbitrage unprofitable."
-    ],
-    neutral: [
-      "Markets appear to be efficient, with no significant arbitrage opportunities."
-    ]
-  }
-};
+const AGENT_NAMES = [
+  'Strategist',
+  'Risk Manager',
+  'Market Scanner',
+  'Sentiment Analyst',
+  'Execution Agent',
+  'Compliance Officer',
+  'Auditor'
+];
 
-// --- Private Helper Functions ---
+let memoryAgents: AgentData[] = [];
+let memoryTrades: TradeData[] = [];
 
-/**
- * Creates a default user and wallet if they don't already exist.
- * This is a temporary measure for development.
- */
-export const getOrCreateDefaultUserAndWallet = async () => {
-  let user = await prisma.user.findUnique({ where: { username: 'default-user' } });
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        username: 'default-user',
-        password: 'password', // In a real app, this would be hashed
-      },
-    });
-  }
-
-  let wallet = await prisma.wallet.findFirst({ where: { userId: user.id } });
-  if (!wallet) {
-    wallet = await prisma.wallet.create({
-      data: {
-        name: 'Default Trading Wallet',
-        address: `0x-default-wallet-${Date.now()}`,
-        userId: user.id,
-        balance: 10000, // Start with a mock balance
-      },
-    });
-  }
-  return { user, wallet };
-};
-
-const generateExplanation = (strategy: string, success: boolean): string => {
-  const explanationSet = TRADE_EXPLANATIONS[strategy];
-  if (!explanationSet) {
-    return "No explanation available for this strategy.";
-  }
-
-  if (success) {
-    return explanationSet.positive[Math.floor(Math.random() * explanationSet.positive.length)];
+export async function initializeAgents() {
+  const isDbConnected = await checkDatabaseConnection();
+  if (isDbConnected) {
+    const count = await prisma.agent.count();
+    if (count === 0) {
+      console.log('Initializing 7-agent tribunal in DB...');
+      for (const name of AGENT_NAMES) {
+        await prisma.agent.create({
+          data: {
+            name,
+            status: 'active',
+            performance: 0.8 + Math.random() * 0.2,
+            capabilities: getCapabilitiesForAgent(name)
+          }
+        });
+      }
+    }
   } else {
-    return explanationSet.negative[Math.floor(Math.random() * explanationSet.negative.length)];
+    console.warn('DB not connected, initializing agents in memory.');
+    memoryAgents = AGENT_NAMES.map((name, i) => ({
+      id: `mem_agent_${i}`,
+      name,
+      status: 'active',
+      performance: 0.8 + Math.random() * 0.2,
+      capabilities: getCapabilitiesForAgent(name)
+    }));
   }
 }
 
-// --- Public Service Functions ---
-
-/**
- * Creates a new AI agent for a given user.
- * @param name - The name of the agent.
- * @param userId - The ID of the user who owns the agent.
- * @returns The newly created agent.
- */
-export const createAgent = async (name: string, userId: string) => {
-  return prisma.agent.create({
-    data: {
-      name,
-      userId,
-      performance: Math.random() * 20 - 10 // Start with a random performance between -10% and +10%
-    },
-  });
-};
-
-/**
- * Retrieves all agents for a given user.
- * @param userId - The ID of the user.
- * @returns A list of agents.
- */
-export const getAgents = async (userId: string) => {
-  return prisma.agent.findMany({ where: { userId } });
-};
-
-
-/**
- * Simulates a trading cycle for all active agents.
- */
-export const runAgentSimulation = async () => {
-  if (getDbStatus().dbStatus !== 'connected') {
-    console.log('Database not connected. Skipping agent simulation.');
-    return;
+function getCapabilitiesForAgent(name: string): string[] {
+  switch (name) {
+    case 'Strategist': return ['strategy_generation', 'pattern_recognition'];
+    case 'Risk Manager': return ['risk_assessment', 'portfolio_balancing'];
+    case 'Market Scanner': return ['data_collection', 'opportunity_detection'];
+    case 'Sentiment Analyst': return ['social_listening', 'nlp'];
+    case 'Execution Agent': return ['trade_execution', 'order_management'];
+    case 'Compliance Officer': return ['policy_enforcement', 'regulatory_check'];
+    case 'Auditor': return ['performance_tracking', 'integrity_validation'];
+    default: return ['general_assistance'];
   }
+}
 
-  console.log('Running agent simulation...');
-  const { user, wallet } = await getOrCreateDefaultUserAndWallet();
+export async function getAgents() {
+  if (await checkDatabaseConnection()) {
+    return await prisma.agent.findMany();
+  }
+  return memoryAgents;
+}
 
-  // Create default agents if none exist
-  let agents = await prisma.agent.findMany({ where: { userId: user.id } });
-  if (agents.length === 0) {
-    console.log('No agents found, creating defaults...');
-    await prisma.agent.createMany({
-      data: [
-        { name: 'Momentum Master', userId: user.id, status: 'active', performance: 12.5 },
-        { name: 'Scalping Pro', userId: user.id, status: 'active', performance: 5.2 },
-        { name: 'Mean Reversion Bot', userId: user.id, status: 'active', performance: -2.1 },
-      ],
+export async function createAgent(data: any) {
+  if (await checkDatabaseConnection()) {
+    return await prisma.agent.create({ data });
+  }
+  const newAgent = { ...data, id: `mem_agent_${Date.now()}` };
+  memoryAgents.push(newAgent);
+  return newAgent;
+}
+
+export async function getTrades() {
+  if (await checkDatabaseConnection()) {
+    return await prisma.trade.findMany({
+      orderBy: { timestamp: 'desc' },
+      take: 50
     });
-    agents = await prisma.agent.findMany({ where: { userId: user.id } });
   }
+  return [...memoryTrades].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 50);
+}
 
-  for (const agent of agents) {
-    // Each agent has a 30% chance to make a trade in each cycle
-    if (Math.random() > 0.7) {
-      continue;
+export async function simulateTrading() {
+  if (Math.random() > 0.7) {
+    const agents = await getAgents();
+    const executionAgent = agents.find(a => a.name === 'Execution Agent');
+    const strategist = agents.find(a => a.name === 'Strategist');
+
+    const symbols = ['BTC/USD', 'ETH/USD', 'SOL/USD'];
+    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+    const side = Math.random() > 0.5 ? 'buy' : 'sell';
+    const amount = Math.random() * 0.1;
+    const price = symbol === 'BTC/USD' ? 60000 + Math.random() * 1000 : 2500 + Math.random() * 100;
+
+    const xaiReasons = [
+      `RSI is showing oversold conditions on ${symbol}.`,
+      `MACD crossover detected on the 4h chart.`,
+      `Sentiment analysis indicates high bullish momentum for ${symbol}.`,
+      `Whale wallet movements suggest a potential breakout.`,
+      `Risk Manager approved increased exposure to ${symbol}.`
+    ];
+    const xaiReason = xaiReasons[Math.floor(Math.random() * xaiReasons.length)];
+
+    const tradeData = {
+      symbol,
+      side,
+      amount,
+      price,
+      agentId: executionAgent?.id,
+      xaiReason: `Decision by ${strategist?.name}: ${xaiReason}`,
+      timestamp: new Date()
+    };
+
+    if (await checkDatabaseConnection()) {
+      await prisma.trade.create({ data: tradeData });
+    } else {
+      memoryTrades.push({ ...tradeData, id: `mem_trade_${Date.now()}` });
     }
 
-    const strategy = STRATEGIES[Math.floor(Math.random() * STRATEGIES.length)];
-    const success = Math.random() < 0.65; // 65% success rate
-    const amount = Math.random() * 1000 + 100; // Trade size between 100 and 1100
-    const profit = (Math.random() * 0.1) * amount * (success ? 1 : -1); // Up to 10% profit or loss
-
-    await prisma.trade.create({
-      data: {
-        amount,
-        profit,
-        success,
-        strategy,
-        walletId: wallet.id,
-        agentId: agent.id,
-        explanation: generateExplanation(strategy, success),
-      },
-    });
-
-    // Update agent performance
-    await prisma.agent.update({
-      where: { id: agent.id },
-      data: { performance: { increment: profit / amount * 100 } },
-    });
-
-     // Update wallet balance
-     await prisma.wallet.update({
-        where: { id: wallet.id },
-        data: { balance: { increment: profit } },
-      });
-
-    console.log(`Agent '${agent.name}' executed a '${strategy}' trade. Profit: ${profit.toFixed(2)}`);
+    console.log(`Trade simulated: ${side} ${amount} ${symbol} at ${price}`);
   }
-};
-
-/**
- * Retrieves the most recent trades.
- * @param limit - The number of trades to retrieve.
- * @returns A list of recent trades with their associated agent.
- */
-export const getRecentTrades = async (limit: number = 20) => {
-  return prisma.trade.findMany({
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      agent: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
-};
+}

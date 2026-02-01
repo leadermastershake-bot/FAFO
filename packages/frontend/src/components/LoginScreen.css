@@ -1,69 +1,88 @@
-#login-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.98);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Courier New', monospace;
+.login-screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.98);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00ff88;
+  animation: fadeIn 0.5s ease-in;
 }
 
-.login-form {
-    background: rgba(10, 10, 10, 0.98);
-    border: 2px solid #00ff88;
-    border-radius: 12px;
-    padding: 40px;
-    text-align: center;
-    max-width: 400px;
-    box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
+.login-form-container {
+  background: rgba(10, 10, 10, 0.98);
+  border: 2px solid #00ff88;
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
 }
 
 .login-form h2 {
-    color: #00ff88;
-    margin-bottom: 30px;
-    font-size: 24px;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 30px;
+  font-size: 24px;
 }
 
-.form-group {
-    margin-bottom: 20px;
-    text-align: left;
+.login-error {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid #ff4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 12px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #00ff88;
-    font-size: 14px;
+.login-form .form-group {
+  margin-bottom: 20px;
+  text-align: left;
 }
 
-.form-group input {
-    width: 100%;
-    padding: 12px;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid #00ff88;
-    border-radius: 6px;
-    color: #00ff88;
-    font-family: inherit;
-    font-size: 14px;
+.login-form .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 
-button.primary {
-    background: rgba(0, 255, 136, 0.3);
-    border: 2px solid #00ff88;
-    color: #00ff88;
-    padding: 12px 20px;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
+.login-form .form-group input,
+.login-form .form-group select {
+  width: 100%;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #00ff88;
+  border-radius: 6px;
+  color: #00ff88;
+  font-family: inherit;
+  font-size: 14px;
 }
 
-button.primary:hover {
-    background: rgba(0, 255, 136, 0.5);
+.login-form button {
+  width: 100%;
+  background: rgba(0, 255, 136, 0.15);
+  border: 2px solid #00ff88;
+  color: #00ff88;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.login-form button:hover {
+  background: rgba(0, 255, 136, 0.25);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.login-form button.primary {
+  background: rgba(0, 255, 136, 0.3);
 }

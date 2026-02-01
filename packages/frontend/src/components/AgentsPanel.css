@@ -1,111 +1,67 @@
-.agents-panel {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    font-family: 'Courier New', monospace;
-    color: #00ff88;
-}
-
-.section-container {
-    background: rgba(0, 255, 136, 0.05);
-    border: 1px solid #00ff88;
-    border-radius: 8px;
-    padding: 15px;
-}
-
-.section-container h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #00ff88;
-    padding-bottom: 5px;
-}
-
-/* Agents List Styles */
-.agents-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-}
-
 .agent-card {
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 6px;
-    padding: 12px;
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid #004400;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.agent-card:hover {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: #00ff88;
 }
 
 .agent-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
+.agent-details {
+  font-size: 11px;
+  padding-left: 18px; /* Align with text next to dot */
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.agent-actions {
+  margin-top: 15px;
+  border-top: 1px solid #004400;
+  padding-top: 15px;
+}
+
+.agent-actions button {
+  width: 100%;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.agent-actions button:hover {
+  background: rgba(0, 255, 136, 0.2);
+}
+
+/* Status dot styles copied from original CSS */
 .status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #ff3333; /* Default to inactive/error */
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff3333;
 }
 
-.status-dot.active {
-    background: #00ff88;
-    animation: pulse 1.5s infinite;
-}
-
-.agent-performance .positive {
-    color: #00ff88;
-}
-
-.agent-performance .negative {
-    color: #ff4444;
-}
-
-/* Trades List (XAI) Styles */
-.trades-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.trades-list table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-}
-
-.trades-list th, .trades-list td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #004400;
-}
-
-.trades-list th {
-    color: #00ff88;
-}
-
-.trades-list .positive {
-    color: #00ff88;
-}
-
-.trades-list .negative {
-    color: #ff4444;
-}
-
-.trades-list .explanation {
-    font-style: italic;
-    color: #aaa;
-    max-width: 300px; /* Prevent long lines */
-}
-
-/* Error Message */
-.error-message {
-    color: #ff4444;
-    padding: 20px;
-    border: 1px solid #ff4444;
-    border-radius: 8px;
-}
+.status-dot.active { background: #00ff88; }
+.status-dot.learning { background: #ffaa00; animation: pulse 1.5s infinite; }
+.status-dot.working { background: #0088ff; animation: pulse 1s infinite; }
 
 @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 5px #00ff88; }
-    50% { box-shadow: 0 0 15px #00ff88; }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
