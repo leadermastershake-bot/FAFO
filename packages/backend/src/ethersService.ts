@@ -34,6 +34,9 @@ async function ensureInitialized() {
 ensureInitialized().catch(() => {});
 
 export function getStatus() {
+  if (!isConfigured) {
+    initializeService();
+  }
   return {
     isConfigured: isConfigured,
     address: wallet?.address || null

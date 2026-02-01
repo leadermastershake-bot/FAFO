@@ -1,15 +1,5 @@
-import { useState, useEffect } from 'react';
-import './Wallet.css';
-
-interface WalletStatus {
-  address: string;
-  balance: string;
-}
-
-interface WalletError {
-  error: string;
-  isConfigured: boolean;
-}
+// packages/frontend/src/components/Wallet.tsx
+import React from 'react';
 
 export function Wallet({ isConfigured }) {
   const [status, setStatus] = useState<WalletStatus | null>(null);

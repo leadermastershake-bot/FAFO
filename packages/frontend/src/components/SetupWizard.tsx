@@ -1,10 +1,5 @@
-import { useState, useEffect } from 'react';
-import './SetupWizard.css';
-
-interface Status {
-  isConfigured: boolean;
-  address: string | null;
-}
+// packages/frontend/src/components/SetupWizard.tsx
+import React from 'react';
 
 export function SetupWizard({ onConfigurationSuccess }) {
   const [isConfigured, setIsConfigured] = useState(true);
