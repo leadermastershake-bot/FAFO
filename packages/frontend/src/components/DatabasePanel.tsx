@@ -2,13 +2,21 @@ import React, { useState, useEffect } from 'react';
 import './Panel.css';
 import './DatabasePanel.css';
 
-const DatabasePanel = () => {
-  const [dbStatus, setDbStatus] = useState(null);
+interface DatabaseStatus {
+  records: number;
+  size: string;
+  backups: number;
+  nextBackup: string;
+  lastBackup: string;
+}
+
+const DatabasePanel: React.FC = () => {
+  const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null);
 
   useEffect(() => {
     const fetchDbStatus = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/database-status');
+        const response = await fetch('/api/database-status');
         const data = await response.json();
         setDbStatus(data);
       } catch (error) {

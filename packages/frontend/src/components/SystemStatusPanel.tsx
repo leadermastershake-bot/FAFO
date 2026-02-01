@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import './Panel.css'; // Using a generic panel stylesheet
 
-const SystemStatusPanel = () => {
-  const [status, setStatus] = useState(null);
+interface SystemStatus {
+  status: string;
+  learningMode: string;
+  activeAgents: number;
+  databaseStatus: string;
+  successRate: string;
+  totalTrades: number;
+  uptime: string;
+}
+
+const SystemStatusPanel: React.FC = () => {
+  const [status, setStatus] = useState<SystemStatus | null>(null);
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/system-status');
+        const response = await fetch('/api/system-status');
         const data = await response.json();
         setStatus(data);
       } catch (error) {

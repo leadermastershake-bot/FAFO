@@ -3,32 +3,44 @@ import { ethers } from 'ethers';
 import './Modal.css';
 import './WalletModal.css';
 
-const WalletModal = ({ isOpen, onClose }) => {
-  const [wallets, setWallets] = useState([]);
-  const [walletType, setWalletType] = useState('metamask');
-  const [walletName, setWalletName] = useState('');
+interface WalletInfo {
+  id: string;
+  name: string;
+  address: string;
+  balance: string;
+  type: string;
+}
+
+interface WalletModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
+  const [wallets, setWallets] = useState<WalletInfo[]>([]);
   const [error, setError] = useState('');
 
   const connectMetaMask = async () => {
     setError('');
-    if (typeof window.ethereum === 'undefined') {
+    const win = window as any;
+    if (typeof win.ethereum === 'undefined') {
       setError('MetaMask is not installed. Please install it to connect.');
       return;
     }
 
     try {
       // Request account access
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      await win.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.BrowserProvider(win.ethereum);
+      const signer = await provider.getSigner();
       const address = await signer.getAddress();
       const balance = await provider.getBalance(address);
 
-      const newWallet = {
+      const newWallet: WalletInfo = {
         id: address,
         name: `MetaMask (${address.substring(0, 6)}...${address.substring(38)})`,
         address: address,
-        balance: `${ethers.utils.formatEther(balance).substring(0, 6)} ETH`,
+        balance: `${ethers.formatEther(balance).substring(0, 6)} ETH`,
         type: 'metamask',
       };
 
@@ -75,7 +87,6 @@ const WalletModal = ({ isOpen, onClose }) => {
             <h4>➕ Add New Wallet</h4>
             {error && <div className="modal-error">{error}</div>}
             <button onClick={connectMetaMask} className="primary">🦊 Connect MetaMask</button>
-            {/* Add buttons for other wallet types here */}
           </div>
         </div>
       </div>

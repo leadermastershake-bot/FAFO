@@ -2,13 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Panel.css';
 import './ChatPanel.css';
 
-const ChatPanel = () => {
-  const [messages, setMessages] = useState([
+interface Message {
+  sender: string;
+  text: string;
+}
+
+const ChatPanel: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([
     { sender: 'system', text: 'METABOTPRIME v7.0 initialized.' },
     { sender: 'llm', text: 'LLM integration active. Ready for commands.' },
   ]);
   const [input, setInput] = useState('');
-  const chatLogRef = useRef(null);
+  const chatLogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Scroll to the bottom of the chat log when new messages are added
@@ -26,7 +31,7 @@ const ChatPanel = () => {
     setInput('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
