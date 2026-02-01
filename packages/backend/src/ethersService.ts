@@ -4,11 +4,13 @@ import erc20Abi from './erc20.abi.json';
 
 dotenv.config();
 
-let provider: ethers.JsonRpcProvider;
-let wallet: ethers.Wallet;
+let provider: ethers.JsonRpcProvider | null = null;
+let wallet: ethers.Wallet | null = null;
 let isConfigured = false;
 
-function initializeService() {
+async function ensureInitialized() {
+  if (isConfigured && provider && wallet) return;
+
   const rpcUrl = process.env.RPC_URL;
   const privateKey = process.env.PRIVATE_KEY;
 
@@ -16,76 +18,78 @@ function initializeService() {
     try {
       provider = new ethers.JsonRpcProvider(rpcUrl);
       wallet = new ethers.Wallet(privateKey, provider);
+      // We don't wait for network detection here to avoid blocking
       isConfigured = true;
-      console.log("Ethers service configured successfully.");
+      console.log("Ethers service initialized.");
     } catch (error: any) {
-      console.error("Failed to configure Ethers service:", error.message);
+      console.error("Failed to initialize Ethers service:", error.message);
       isConfigured = false;
     }
   } else {
-    console.warn("Ethers service is not configured. Please provide RPC_URL and PRIVATE_KEY in .env file or use the configuration API.");
     isConfigured = false;
   }
 }
 
-// Initial setup
-initializeService();
+// Try to initialize on load
+ensureInitialized().catch(() => {});
 
 export function getStatus() {
   return {
     isConfigured: isConfigured,
-    address: isConfigured ? wallet.address : null
+    address: wallet?.address || null
   };
 }
 
-export async function getBalance(): Promise<string> {
+export async function getBalance(chain: string = 'ethereum'): Promise<string> {
+  await ensureInitialized();
   if (!isConfigured) throw new Error('Service not configured');
   try {
-    const balanceWei = await provider.getBalance(wallet.address);
+    const balanceWei = await provider!.getBalance(wallet!.address);
     return ethers.formatEther(balanceWei);
   } catch (error: any) {
-    console.error('Error getting balance:', error.message);
-    throw new Error('Could not get wallet balance.');
+    console.error(`Error getting balance on ${chain}:`, error.message);
+    return "0.0";
   }
 }
 
 export function configure(newRpcUrl: string, newPrivateKey: string) {
     process.env.RPC_URL = newRpcUrl;
     process.env.PRIVATE_KEY = newPrivateKey;
-    initializeService();
+    isConfigured = false;
+    ensureInitialized().catch(() => {});
     return getStatus();
 }
 
 // --- Smart Contract Functions ---
 
-function getContract(contractAddress: string): ethers.Contract {
+async function getContract(contractAddress: string): Promise<ethers.Contract> {
+    await ensureInitialized();
     if (!isConfigured) throw new Error('Service not configured');
-    return new ethers.Contract(contractAddress, erc20Abi, wallet);
+    return new ethers.Contract(contractAddress, erc20Abi, wallet!);
 }
 
-export async function approve(contractAddress: string, spender: string, amount: string): Promise<string> {
-    const contract = getContract(contractAddress);
-    const amountWei = ethers.parseEther(amount);
+export async function approve(contractAddress: string, spender: string, amount: string, chain: string = 'ethereum'): Promise<string> {
+    const contract = await getContract(contractAddress);
+    const amountWei = ethers.parseUnits(amount, 18);
     const tx = await contract.approve(spender, amountWei);
     await tx.wait();
     return tx.hash;
 }
 
-export async function transfer(contractAddress: string, to: string, amount: string): Promise<string> {
-    const contract = getContract(contractAddress);
-    const amountWei = ethers.parseEther(amount);
+export async function transfer(contractAddress: string, to: string, amount: string, chain: string = 'ethereum'): Promise<string> {
+    const contract = await getContract(contractAddress);
+    const amountWei = ethers.parseUnits(amount, 18);
     const tx = await contract.transfer(to, amountWei);
     await tx.wait();
     return tx.hash;
 }
 
-// Conditionally export wallet and provider
 export function getWallet(): ethers.Wallet {
-    if (!isConfigured) throw new Error('Service not configured');
+    if (!wallet) throw new Error('Wallet not initialized');
     return wallet;
 }
 
 export function getProvider(): ethers.JsonRpcProvider {
-    if (!isConfigured) throw new Error('Service not configured');
+    if (!provider) throw new Error('Provider not initialized');
     return provider;
 }
