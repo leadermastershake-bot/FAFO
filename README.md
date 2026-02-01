@@ -30,6 +30,16 @@ Ready to spin up your own instance of Metabointprime-vNext? Of course you are. F
 
 **[>> DEPLOYMENT.md <<](DEPLOYMENT.md)**
 
+## Getting Started
+
+To get METABOTPRIME vNext up and running on your local machine, run our interactive setup wizard:
+
+```bash
+pnpm setup
+```
+
+This will guide you through the process of configuring your environment variables and installing dependencies.
+
 ## Technical Specifications (a.k.a. The Guts of the Beast)
 
 *   **Monorepo:** Managed with pnpm workspaces.

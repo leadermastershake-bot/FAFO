@@ -2,13 +2,29 @@ import React, { useState, useEffect } from 'react';
 import './Panel.css';
 import './TradingDashboardPanel.css';
 
-const TradingDashboardPanel = () => {
-  const [dashboard, setDashboard] = useState(null);
+interface Trade {
+  id: number;
+  type: string;
+  pair: string;
+  price: number;
+  profit: number;
+  success: boolean;
+}
+
+interface Dashboard {
+  currentCapital: number;
+  target: number;
+  progress: number;
+  recentTrades: Trade[];
+}
+
+const TradingDashboardPanel: React.FC = () => {
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/trading-dashboard');
+        const response = await fetch('/api/trading-dashboard');
         const data = await response.json();
         setDashboard(data);
       } catch (error) {

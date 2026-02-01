@@ -2,7 +2,22 @@ import React, { useState, useEffect } from 'react';
 import './Panel.css';
 import './AgentsPanel.css';
 
-const AgentCard = ({ name, status, task, performance }) => {
+interface Agent {
+  id: string;
+  name: string;
+  status: string;
+  task: string;
+  performance: number;
+}
+
+interface AgentCardProps {
+  name: string;
+  status: string;
+  task: string;
+  performance: number;
+}
+
+const AgentCard: React.FC<AgentCardProps> = ({ name, status, task, performance }) => {
   return (
     <div className="agent-card">
       <div className="agent-status">
@@ -17,13 +32,13 @@ const AgentCard = ({ name, status, task, performance }) => {
   );
 };
 
-const AgentsPanel = () => {
-  const [agents, setAgents] = useState([]);
+const AgentsPanel: React.FC = () => {
+  const [agents, setAgents] = useState<Agent[]>([]);
 
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/agents');
+        const response = await fetch('/api/agents');
         const data = await response.json();
         setAgents(data);
       } catch (error) {

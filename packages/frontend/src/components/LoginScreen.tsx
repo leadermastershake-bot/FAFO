@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import './LoginScreen.css';
 
-const LoginScreen = ({ onLogin }) => {
+interface User {
+  username: string;
+  accessLevel: string;
+}
+
+interface LoginScreenProps {
+  onLogin: (user: User) => void;
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [accessLevel, setAccessLevel] = useState('user');
   const [error, setError] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError('Please enter username and password.');
@@ -16,7 +25,7 @@ const LoginScreen = ({ onLogin }) => {
 
     try {
       setError('');
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,10 +39,9 @@ const LoginScreen = ({ onLogin }) => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // On successful login, call the onLogin prop from App
       onLogin({ username: data.username, accessLevel: data.accessLevel });
 
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       console.error('Login error:', err);
     }
