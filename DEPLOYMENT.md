@@ -28,18 +28,15 @@ pnpm install
 
 ### 3. Configure the Backend
 
-Before running the application, you must create a `.env` file in the `packages/backend` directory.
+Before running the application, you must configure your environment variables. We provide an interactive CLI tool for this.
 
-1.  Create a new file named `.env` inside `packages/backend`.
-2.  Add the following content to the file:
+```bash
+pnpm setup
+# OR
+npm run setup
+```
 
-    ```
-    PORT=3001
-    RPC_URL=""
-    PRIVATE_KEY=""
-    ```
-
-    You can leave the `RPC_URL` and `PRIVATE_KEY` values blank for now.
+The wizard will guide you through setting up your `PORT`, `RPC_URL`, `PRIVATE_KEY`, and `DATABASE_URL`. It will automatically create the `.env` file in `packages/backend/`.
 
 ### 4. Running the Application
 
