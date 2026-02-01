@@ -1,0 +1,11 @@
+{
+  "name": "model-service",
+  "version": "1.0.0",
+  "description": "AI/ML service for Metabointprime-vNext",
+  "scripts": {
+    "dev": "python app.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
