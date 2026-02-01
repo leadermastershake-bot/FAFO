@@ -26,8 +26,19 @@ Here's a glimpse of the firepower you'll be wielding:
 
 ## Deployment (a.k.a. Assembling the Golem)
 
-Ready to spin up your own instance of Metabointprime-vNext? Of course you are. For detailed, step-by-step instructions, consult our official guide:
+Ready to spin up your own instance of Metabointprime-vNext? Of course you are.
 
+### Quick Start
+Run the following command in your terminal to install everything and configure your environment:
+```bash
+./install.sh   # Linux/macOS
+# OR
+install.bat    # Windows
+```
+
+For detailed, step-by-step instructions, consult our official guides:
+
+**[>> INSTALL.md (Start Here) <<](INSTALL.md)**
 **[>> DEPLOYMENT.md <<](DEPLOYMENT.md)**
 
 ## Getting Started

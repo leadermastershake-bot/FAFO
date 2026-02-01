@@ -1,0 +1,72 @@
+.dashboard-layout {
+  height: 100vh;
+  width: 100vw;
+  background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+  position: relative;
+}
+
+.panel-container {
+  padding-top: 40px;
+  height: calc(100% - 40px);
+  position: relative;
+  overflow: hidden;
+}
+
+.agents-list, .trades-list {
+  font-size: 0.85rem;
+}
+
+.agent-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.status-active { color: #00ff88; }
+.status-offline { color: #ff4444; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+  padding: 5px;
+}
+
+td {
+  padding: 5px;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.buy { color: #00ff88; }
+.sell { color: #ff4444; }
+
+.settings-panel h4 {
+  margin-top: 0;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+  padding-bottom: 5px;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.theme-grid button {
+  background: transparent;
+  border: 1px solid;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.theme-grid button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

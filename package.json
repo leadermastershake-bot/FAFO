@@ -7,7 +7,10 @@
   "scripts": {
     "setup": "node scripts/setup.js",
     "dev:backend": "pnpm --filter backend dev",
-    "dev:frontend": "pnpm --filter frontend dev"
+    "dev:frontend": "pnpm --filter frontend dev",
+    "init": "pnpm install && npm run setup",
+    "setup": "node packages/backend/src/scripts/setup.js",
+    "prisma:push": "pnpm --filter backend prisma db push"
   },
   "keywords": [
     "react",
