@@ -1,67 +1,93 @@
 import React, { useState } from 'react';
 import './LoginScreen.css';
 
-interface LoginScreenProps {
-  onLogin: (username: string, accessLevel: string) => void;
+interface User {
+  username: string;
+  accessLevel: string;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+interface LoginScreenProps {
+  onLogin: (user: User) => void;
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [accessLevel, setAccessLevel] = useState('user');
+  const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    // Basic validation
-    if (username.trim() && password.trim()) {
-      onLogin(username, accessLevel);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username || !password) {
+      setError('Please enter username and password.');
+      return;
+    }
+
+    try {
+      setError('');
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password, accessLevel }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      onLogin({ username: data.username, accessLevel: data.accessLevel });
+
+    } catch (err: any) {
+      setError(err.message);
+      console.error('Login error:', err);
     }
   };
 
   return (
-    <div id="login-screen">
-      <div className="login-form">
-        <h2>🤖 METABOTPRIME v6.2</h2>
-        <div className="form-group">
-          <label>Username:</label>
-          <input
-            type="text"
-            id="username"
-            placeholder="Enter Username"
-            autoComplete="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label>Password:</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="Enter Password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label>Access Level:</label>
-          <select
-            id="access-level"
-            value={accessLevel}
-            onChange={(e) => setAccessLevel(e.target.value)}
-          >
-            <option value="user">Standard User</option>
-            <option value="admin">Administrator</option>
-            <option value="superadmin">Super Administrator</option>
-          </select>
-        </div>
-        <button onClick={handleLogin} className="primary">🔐 LOGIN</button>
-        <button onClick={() => alert('Access request feature coming soon!')}>📝 REQUEST ACCESS</button>
-        <div style={{ marginTop: '20px', fontSize: '11px', color: '#666' }}>
-          Super Admin: LMS only<br />
-          v6.2: Enhanced LLM Integration
-        </div>
+    <div className="login-screen-overlay">
+      <div className="login-form-container">
+        <form onSubmit={handleLogin} className="login-form">
+          <h2>🤖 METABOTPRIME v7.0</h2>
+          <div className="form-group">
+            <label htmlFor="username">Username:</label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter Username"
+              autoComplete="username"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">Password:</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter Password"
+              autoComplete="current-password"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="access-level">Access Level:</label>
+            <select id="access-level" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)}>
+              <option value="user">Standard User</option>
+              <option value="admin">Administrator</option>
+              <option value="superadmin">Super Administrator</option>
+            </select>
+          </div>
+          {error && <div className="login-error">{error}</div>}
+          <button type="submit" className="primary">🔐 LOGIN</button>
+        </form>
       </div>
     </div>
   );
 };
+
+export default LoginScreen;

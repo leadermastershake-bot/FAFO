@@ -1,42 +1,90 @@
-import React from 'react';
-import { Panel } from './Panel';
-import { useMarketData } from '../contexts/MarketDataContext';
+import React, { useState, useEffect } from 'react';
+import './Panel.css'; // Using a generic panel stylesheet
 
-interface SystemStatusPanelProps {
-  onClose: () => void;
+interface SystemStatus {
+  status: string;
+  learningMode: string;
+  activeAgents: number;
+  databaseStatus: string;
+  successRate: string;
+  totalTrades: number;
+  uptime: string;
 }
 
-export const SystemStatusPanel: React.FC<SystemStatusPanelProps> = ({ onClose }) => {
-  const { isStale } = useMarketData();
-  const handleHealthCheck = () => {};
-  const handleOptimizeSystem = () => {};
-  const handleGenerateReport = () => {};
-  const handleLlmDiagnose = () => {};
+const SystemStatusPanel: React.FC = () => {
+  const [status, setStatus] = useState<SystemStatus | null>(null);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch('/api/system-status');
+        const data = await response.json();
+        setStatus(data);
+      } catch (error) {
+        console.error('Failed to fetch system status:', error);
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!status) {
+    return (
+      <div className="panel">
+        <div className="panel-header">
+          <span>🤖 METABOTPRIME System</span>
+        </div>
+        <div className="panel-content">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <Panel title="🤖 METABOTPRIME System" onClose={onClose}>
-      <div><span className="status-dot active"></span>System: <span id="system-status">Online</span></div>
-      <div>🧠 Learning Mode: <span id="learning-mode">Active</span></div>
-      <div>⚡ Active Agents: <span id="active-agents">0</span></div>
-      <div>📊 Database: <span id="db-status">Configuring...</span></div>
-      <div>🎯 Success Rate: <span id="success-rate">0%</span></div>
-      <div>💹 Total Trades: <span id="total-trades">0</span></div>
-      <div>⏱️ Uptime: <span id="uptime">00:00:00</span></div>
-
-      <div style={{ marginTop: '15px' }}>
-        <div>🔐 Security Level: <span id="security-level">HIGH</span></div>
-        <div>🌐 Network Health: <span id="network-health" style={{ color: isStale ? '#ff4444' : '#00ff88' }}>{isStale ? 'STALE DATA' : 'OPTIMAL'}</span></div>
-        <div>⚖️ System Load: <span id="system-load">12%</span></div>
-        <div>🧠 LLM Status: <span id="llm-status">Ready</span></div>
+    <div className="panel">
+      <div className="panel-header">
+        <span>🤖 METABOTPRIME System</span>
       </div>
+      <div className="panel-content">
+        <div className="status-item">
+          <div><span className="status-dot active"></span>System Status</div>
+          <span>{status.status}</span>
+        </div>
+        <div className="status-item">
+          <div>🧠 Learning Mode</div>
+          <span>{status.learningMode}</span>
+        </div>
+        <div className="status-item">
+          <div>⚡ Active Agents</div>
+          <span>{status.activeAgents}</span>
+        </div>
+        <div className="status-item">
+          <div>📊 Database</div>
+          <span>{status.databaseStatus}</span>
+        </div>
+        <div className="status-item">
+          <div>🎯 Success Rate</div>
+          <span>{status.successRate}</span>
+        </div>
+        <div className="status-item">
+          <div>💹 Total Trades</div>
+          <span>{status.totalTrades}</span>
+        </div>
+        <div className="status-item">
+          <div>⏱️ Uptime</div>
+          <span>{status.uptime}</span>
+        </div>
 
-      <div style={{ marginTop: '15px' }}>
-        <h4>🔧 Quick Actions</h4>
-        <button onClick={handleHealthCheck} style={{ width: '100%', margin: '5px 0' }}>🏥 Health Check</button>
-        <button onClick={handleOptimizeSystem} style={{ width: '100%', margin: '5px 0' }}>⚡ Optimize System</button>
-        <button onClick={handleGenerateReport} style={{ width: '100%', margin: '5px 0' }}>📋 Generate Report</button>
-        <button onClick={handleLlmDiagnose} style={{ width: '100%', margin: '5px 0' }} className="admin">🧠 LLM Diagnose</button>
+        <div className="quick-actions">
+          <h4>🔧 Quick Actions</h4>
+          <button>🏥 Health Check</button>
+          <button>⚡ Optimize System</button>
+          <button>📋 Generate Report</button>
+        </div>
       </div>
-    </Panel>
+    </div>
   );
 };
+
+export default SystemStatusPanel;

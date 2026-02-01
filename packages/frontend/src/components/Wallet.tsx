@@ -1,17 +1,7 @@
-import { useState, useEffect } from 'react';
-import './Wallet.css';
+// packages/frontend/src/components/Wallet.tsx
+import React from 'react';
 
-interface WalletStatus {
-  address: string;
-  balance: string;
-}
-
-interface WalletError {
-  error: string;
-  isConfigured: boolean;
-}
-
-export function Wallet() {
+export function Wallet({ isConfigured }) {
   const [status, setStatus] = useState<WalletStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,8 +27,10 @@ export function Wallet() {
         setIsLoading(false);
       }
     }
-    fetchWalletStatus();
-  }, []);
+    if (isConfigured) {
+      fetchWalletStatus();
+    }
+  }, [isConfigured]);
 
   if (isLoading) {
     return <div className="wallet-container">Loading wallet...</div>;
