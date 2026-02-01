@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css'
+import React, { useState, useEffect } from 'react';
 import { SetupWizard } from './components/SetupWizard'
 import LoginScreen from './components/LoginScreen'
 import SystemStatusPanel from './components/SystemStatusPanel'
