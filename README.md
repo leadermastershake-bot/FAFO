@@ -32,13 +32,19 @@ Ready to spin up your own instance of Metabointprime-vNext? Of course you are. F
 
 ## Getting Started
 
-To get METABOTPRIME vNext up and running on your local machine, run our interactive setup wizard:
+To get METABOTPRIME vNext up and running on your local machine, simply run the installer:
 
+### Linux / macOS
 ```bash
-pnpm setup
+./install.sh
 ```
 
-This will guide you through the process of configuring your environment variables and installing dependencies.
+### Windows
+```cmd
+install.bat
+```
+
+For more detailed instructions, see **[INSTALL.md](INSTALL.md)**.
 
 ## Technical Specifications (a.k.a. The Guts of the Beast)
 

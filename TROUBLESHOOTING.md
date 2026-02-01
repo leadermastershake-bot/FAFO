@@ -4,7 +4,17 @@ This file will document any errors or issues encountered during the development 
 
 ## Known Issues
 
-- *No issues yet.*
+### Issue: `pnpm` command not found
+- **Description**: Occurs when `pnpm` is not installed globally.
+- **Resolution**: Run `corepack enable` in your terminal, or install pnpm manually with `npm install -g pnpm`.
+
+### Issue: Port 3001 or 5173 already in use
+- **Description**: The application cannot start because the required ports are taken by another process.
+- **Resolution**: The setup wizard will warn you about this. You can kill the process using the port (e.g., `fuser -k 3001/tcp` on Linux) or change the port in `packages/backend/.env`.
+
+### Issue: RPC Connection Failure
+- **Description**: The setup wizard reports it could not connect to your Ethereum RPC URL.
+- **Resolution**: Verify your RPC URL (e.g., from Infura/Alchemy) and ensure your internet connection is active. You can still proceed, but blockchain features may not work.
 
 ---
 

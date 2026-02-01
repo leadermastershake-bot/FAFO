@@ -18,12 +18,16 @@ git clone https://github.com/your-username/metabotprime-vnext.git
 cd metabotprime-vnext
 ```
 
-### 2. Run the Setup Wizard
+### 2. Run the Installer
 
-The easiest way to set up the project is by using our interactive setup wizard. This script will check your environment, install dependencies, and help you configure your environment variables.
+The easiest way to set up the project is by using our interactive installer. This script will check your environment, install dependencies, and help you configure your environment variables.
 
 ```bash
-pnpm setup
+# Linux / macOS
+./install.sh
+
+# Windows
+install.bat
 ```
 
 The wizard will prompt you for:
