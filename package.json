@@ -5,6 +5,7 @@
   "description": "AI agent platform for Web3 trading and interaction",
   "main": "index.js",
   "scripts": {
+    "setup": "node scripts/setup.js",
     "dev:backend": "pnpm --filter backend dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "init": "pnpm install && npm run setup",
