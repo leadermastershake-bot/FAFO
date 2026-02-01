@@ -1,15 +1,17 @@
 import * as dotenv from 'dotenv';
 import express from 'express';
+import cors from 'cors';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ethersService from './ethersService';
-import * as AICoreService from './AICoreService';
+import { TribunalService } from './services/TribunalService';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const port = process.env.PORT || 3001;
 
+app.use(cors());
 app.use(express.json());
 
 // --- Status and Configuration ---
@@ -18,11 +20,28 @@ app.get('/', (req, res) => {
   res.send('METABOTPRIME Backend is running!');
 });
 
-app.get('/api/status', (req, res) => {
-  res.json(ethersService.getStatus());
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
-app.post('/api/configure', async (req, res) => {
+app.get('/api/status', (req, res) => {
+  const ethersStatus = ethersService.getStatus();
+  const dbStatus = getDbStatus();
+  res.json({ ...ethersStatus, ...dbStatus });
+});
+
+app.get('/api/db-health', async (req, res) => {
+  try {
+    await prisma.$connect();
+    res.json({ status: 'ok' });
+  } catch (error: any) {
+    res.status(500).json({ status: 'error', message: error.message });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+app.post('/api/configure', async (req: any, res: any) => {
   const { rpcUrl, privateKey } = req.body;
   if (!rpcUrl || !privateKey) {
     return res.status(400).json({ error: 'rpcUrl and privateKey are required' });
@@ -39,14 +58,85 @@ app.post('/api/configure', async (req, res) => {
   }
 });
 
+// --- Auth Endpoints ---
+
+app.post('/api/login', (req, res) => {
+  const { username, password, accessLevel } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  res.json({
+    username: username,
+    accessLevel: accessLevel,
+    message: 'Login successful!'
+  });
+});
+
+// --- Panel Data Endpoints ---
+
+app.get('/api/system-status', (req, res) => {
+  res.json({
+    status: 'Online',
+    learningMode: 'Active',
+    activeAgents: 3,
+    databaseStatus: 'Connected',
+    successRate: '68%',
+    totalTrades: 142,
+    uptime: '01:23:45',
+  });
+});
+
+app.get('/api/trading-dashboard', (req, res) => {
+  res.json({
+    currentCapital: 1234.56,
+    target: 10000.00,
+    progress: 12.35,
+    recentTrades: [
+      { id: 1, type: 'BUY', pair: 'BTC/USD', price: 68123.45, profit: 56.78, success: true },
+      { id: 2, type: 'SELL', pair: 'ETH/USD', price: 3456.78, profit: -12.34, success: false },
+      { id: 3, type: 'BUY', pair: 'SOL/USD', price: 172.50, profit: 23.45, success: true },
+    ]
+  });
+});
+
+app.get('/api/database-status', (req, res) => {
+  res.json({
+    records: 1200000,
+    size: '256MB',
+    backups: 12,
+    nextBackup: 'In 3 hours',
+    lastBackup: '3 hours ago',
+  });
+});
+
+app.get('/api/agents', (req, res) => {
+  res.json([
+    { id: 'alpha', name: 'ALPHA - Strategy Optimizer', status: 'active', task: 'Analyzing market patterns', performance: 0.75 },
+    { id: 'beta', name: 'BETA - Risk Manager', status: 'working', task: 'Monitoring portfolio risk', performance: 0.92 },
+    { id: 'gamma', name: 'GAMMA - Network Monitor', status: 'learning', task: 'System health monitoring', performance: -0.15 },
+  ]);
+});
+
+app.post('/api/chat', (req, res) => {
+  const { message } = req.body;
+  res.json({
+    sender: 'llm',
+    text: `Acknowledged: "${message}". Processing...`
+  });
+});
+
 // --- Wallet and Contract ---
 
 app.get('/api/wallet/balance', async (req, res) => {
   try {
-    const balance = await ethersService.getBalance();
+    const chain = (req.query.chain as string) || 'ethereum';
+    const balance = await ethersService.getBalance(chain);
     res.json({
       address: ethersService.getWallet().address,
-      balance: balance
+      balance: balance,
+      chain
     });
   } catch (error: any) {
     if (error.message === 'Service not configured') {
@@ -57,12 +147,12 @@ app.get('/api/wallet/balance', async (req, res) => {
 });
 
 app.post('/api/contract/approve', async (req, res) => {
-    const { contractAddress, spender, amount } = req.body;
+    const { contractAddress, spender, amount, chain } = req.body;
     if (!contractAddress || !spender || !amount) {
         return res.status(400).json({ error: 'contractAddress, spender, and amount are required' });
     }
     try {
-        const txHash = await ethersService.approve(contractAddress, spender, amount);
+        const txHash = await ethersService.approve(contractAddress, spender, amount, chain || 'ethereum');
         res.json({ message: 'Approval successful', txHash });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -70,60 +160,46 @@ app.post('/api/contract/approve', async (req, res) => {
 });
 
 app.post('/api/contract/transfer', async (req, res) => {
-    const { contractAddress, to, amount } = req.body;
+    const { contractAddress, to, amount, chain } = req.body;
     if (!contractAddress || !to || !amount) {
         return res.status(400).json({ error: 'contractAddress, to, and amount are required' });
     }
     try {
-        const txHash = await ethersService.transfer(contractAddress, to, amount);
+        const txHash = await ethersService.transfer(contractAddress, to, amount, chain || 'ethereum');
         res.json({ message: 'Transfer successful', txHash });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// --- AI Core Service ---
+// --- Tribunal Service ---
 
-app.post('/api/market_data', async (req, res) => {
-    const { coin_id, vs_currency, days } = req.body;
-    if (!coin_id || !vs_currency || !days) {
-        return res.status(400).json({ error: 'coin_id, vs_currency, and days are required' });
-    }
-    try {
-        const marketData = await AICoreService.getMarketData({ coin_id, vs_currency, days });
-        res.json({ marketData });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
+const tribunalService = new TribunalService();
 
-app.post('/api/volatility', async (req, res) => {
-    const { coin_id, vs_currency } = req.body;
-    if (!coin_id || !vs_currency) {
-        return res.status(400).json({ error: 'coin_id and vs_currency are required' });
-    }
-    try {
-        const volatility = await AICoreService.getVolatility({ coin_id, vs_currency });
-        res.json({ volatility });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/signal', async (req, res) => {
-    const { coin_id, vs_currency, days, indicators } = req.body;
-    if (!coin_id || !vs_currency || !days || !indicators) {
-        return res.status(400).json({ error: 'coin_id, vs_currency, days, and indicators are required' });
-    }
-    try {
-        const signal = await AICoreService.getTradingSignal({ coin_id, vs_currency, days, indicators });
-        res.json({ signal });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
+app.post('/api/v1/tribunal/predict', async (req, res) => {
+  try {
+    const result = await tribunalService.getTribunalDecision();
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to get tribunal decision' });
+  }
 });
 
 
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`Server listening at http://localhost:${port}`);
+
+  // Initialize agents and simulation
+  try {
+    await agentService.initializeAgents();
+    setInterval(async () => {
+      try {
+        await agentService.simulateTrading();
+      } catch (err) {
+        console.error('Simulation error:', err);
+      }
+    }, 60000); // Run simulation every minute
+  } catch (err) {
+    console.error('Failed to initialize agents:', err);
+  }
 });

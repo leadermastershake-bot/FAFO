@@ -1,0 +1,77 @@
+.draggable-panel {
+  position: absolute;
+  background: rgba(10, 10, 10, 0.95);
+  border: 2px solid var(--primary-color, #00ff88);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.draggable-panel.maximized {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: calc(100vh - 40px) !important;
+  transform: none !important;
+}
+
+.panel-header {
+  background: rgba(0, 255, 136, 0.1);
+  padding: 8px 12px;
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+  user-select: none;
+}
+
+.panel-title {
+  color: var(--primary-color, #00ff88);
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.panel-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.panel-controls button {
+  background: transparent;
+  border: none;
+  color: var(--primary-color, #00ff88);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.panel-controls button:hover {
+  opacity: 1;
+}
+
+.panel-controls .close-btn:hover {
+  color: #ff4444;
+}
+
+.panel-content {
+  padding: 15px;
+  flex-grow: 1;
+  overflow-y: auto;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+}
+
+.draggable-panel.minimized {
+  min-height: 0;
+}

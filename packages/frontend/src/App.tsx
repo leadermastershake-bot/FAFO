@@ -1,146 +1,108 @@
+import React, { useState, useEffect } from 'react';
 import './App.css'
 import React, { useState, useEffect } from 'react';
 import { SetupWizard } from './components/SetupWizard'
-import { Wallet } from './components/Wallet'
-import { Trading } from './components/Trading'
-import ChartComponent from './components/ChartComponent'
-import ControlPanel from './components/ControlPanel'
-import axios from 'axios';
+import LoginScreen from './components/LoginScreen'
+import SystemStatusPanel from './components/SystemStatusPanel'
+import TradingDashboardPanel from './components/TradingDashboardPanel'
+import DatabasePanel from './components/DatabasePanel'
+import AgentsPanel from './components/AgentsPanel'
+import ChatPanel from './components/ChatPanel'
+import WalletModal from './components/WalletModal'
+import ErrorBoundary from './components/ErrorBoundary'
 
-function App() {
-  const [isConfigured, setIsConfigured] = useState(false);
-  const [indicators, setIndicators] = useState({
-    sma: false,
-    ema: false,
-    rsi: false,
-    macd: false,
-    bollinger_bands: false,
-  });
-  const [timeline, setTimeline] = useState('30');
-  const [chartData, setChartData] = useState([]);
-  const [signal, setSignal] = useState('hold');
-  const [volatility, setVolatility] = useState(null);
-  const [tradingPair, setTradingPair] = useState('bitcoin');
-
-  const handleIndicatorChange = (indicator) => {
-    setIndicators(prev => ({ ...prev, [indicator]: !prev[indicator] }));
-  };
-
-  const handleTimelineChange = (newTimeline) => {
-    setTimeline(newTimeline);
-  };
-
-  const handleTradingPairChange = (newTradingPair) => {
-    setTradingPair(newTradingPair);
-  };
-
-  const handleConfigurationSuccess = () => {
-    setIsConfigured(true);
-  };
-
-  useEffect(() => {
-    const fetchSignal = async () => {
-      if (!isConfigured) return;
-      try {
-        const activeIndicators = Object.keys(indicators).filter(key => indicators[key]);
-        const response = await axios.post('/api/signal', {
-          coin_id: tradingPair,
-          vs_currency: 'usd',
-          days: timeline,
-          indicators: activeIndicators,
-        });
-        setSignal(response.data.signal);
-      } catch (error) {
-        console.error('Error fetching trading signal:', error);
-      }
-    };
-
-    fetchSignal();
-  }, [indicators, timeline, isConfigured]);
-
-    useEffect(() => {
-        if (!isConfigured) return;
-
-        const fetchMarketData = async () => {
-            try {
-                const response = await axios.post('/api/market_data', {
-                    coin_id: tradingPair,
-                    vs_currency: 'usd',
-                    days: timeline,
-                });
-                setChartData(response.data.marketData.prices);
-            } catch (error) {
-                console.error('Error fetching market data:', error);
-            }
-        };
-
-        fetchMarketData();
-    }, [timeline, isConfigured]);
-
-    useEffect(() => {
-        if (!isConfigured) return;
-
-        const fetchVolatility = async () => {
-            try {
-                const response = await axios.post('/api/volatility', {
-                    coin_id: tradingPair,
-                    vs_currency: 'usd',
-                });
-                setVolatility(response.data.volatility);
-            } catch (error) {
-                console.error('Error fetching volatility:', error);
-            }
-        };
-
-        fetchVolatility();
-    }, [isConfigured]);
-
-    useEffect(() => {
-        const checkStatus = async () => {
-            try {
-                const response = await axios.get('/api/status');
-                setIsConfigured(response.data.isConfigured);
-            } catch (error) {
-                console.error('Error fetching status:', error);
-            }
-        };
-        checkStatus();
-    }, []);
-
-  return (
-    <div className="app-container">
-      <SetupWizard onConfigurationSuccess={handleConfigurationSuccess} />
-      <header className="app-header">
-        <h1>METABOTPRIME vNext</h1>
-        <nav>
-          <span>Dashboard</span>
-          <span>Agents</span>
-          <span>Wallets</span>
-          <span>Settings</span>
-        </nav>
-      </header>
-      <main className="app-main">
-        <Wallet isConfigured={isConfigured} />
-        <Trading />
-        <div className="ai-core-container">
-            <ControlPanel
-                indicators={indicators}
-                onIndicatorChange={handleIndicatorChange}
-                onTimelineChange={handleTimelineChange}
-                onTradingPairChange={handleTradingPairChange}
-            />
-            <ChartComponent chartData={chartData} />
-            <div className="signal-display">
-                <h2>Current Signal: {signal.toUpperCase()}</h2>
-                {volatility && <p>Volatility: {volatility.toFixed(4)}</p>}
-            </div>
-        </div>
-      </main>
-      <footer className="app-footer">
-        <p>Status: Connected</p>
-      </footer>
-    </div>
-  )
+interface User {
+  username: string;
+  accessLevel: string;
 }
 
-export default App
+interface Status {
+  isConfigured: boolean;
+  address: string | null;
+}
+
+function App() {
+  const [isSetupComplete, setIsSetupComplete] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [isBackendConfigured, setIsBackendConfigured] = useState(true);
+
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        const response = await fetch('/api/status');
+        const data: Status = await response.json();
+        setIsBackendConfigured(data.isConfigured);
+        setIsSetupComplete(true);
+      } catch (err) {
+        console.error('Failed to connect to the backend.');
+        setIsBackendConfigured(false);
+        setIsSetupComplete(true);
+      }
+    }
+    checkStatus();
+  }, []);
+
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
+  if (!isSetupComplete) {
+    return <div className="loading">Loading system...</div>;
+  }
+
+  if (!isBackendConfigured) {
+    return <SetupWizard />;
+  }
+
+  if (!user) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="app">
+      <WalletModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+      />
+      <div className="menu-bar">
+        <span style={{ fontWeight: 'bold' }}>METABOTPRIME vNext</span>
+        <div className="menu-separator"></div>
+        <div className="menu-item">📊 System</div>
+        <div className="menu-item">📈 Trading</div>
+        <div className="menu-item">🗃️ Database</div>
+        <div className="menu-item">🤖 Agents</div>
+        <div className="menu-item">💬 Chat</div>
+        <div className="menu-separator"></div>
+        <div className="menu-item" onClick={() => setIsWalletModalOpen(true)}>💛 Wallets</div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span>{user.username} ({user.accessLevel})</span>
+          <div className="menu-item" onClick={handleLogout}>🚪 Logout</div>
+        </div>
+      </div>
+      <div className="panels-grid">
+        <ErrorBoundary>
+          <SystemStatusPanel />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <TradingDashboardPanel />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <DatabasePanel />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <AgentsPanel />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <ChatPanel />
+        </ErrorBoundary>
+      </div>
+    </div>
+  );
+}
+
+export default App;

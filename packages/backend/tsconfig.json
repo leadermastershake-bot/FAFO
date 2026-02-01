@@ -4,8 +4,12 @@
     "module": "commonjs",
     "rootDir": "./src",
     "outDir": "./dist",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
