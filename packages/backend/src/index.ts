@@ -4,9 +4,7 @@ import cors from 'cors';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as ethersService from './ethersService';
-import prisma, { checkDatabaseConnection } from './prismaService';
-import * as agentService from './agentService';
-import * as marketService from './marketService';
+import { TribunalService } from './services/TribunalService';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -20,6 +18,10 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('METABOTPRIME Backend is running!');
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
 app.get('/api/status', (req, res) => {
@@ -168,6 +170,19 @@ app.post('/api/contract/transfer', async (req, res) => {
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
+});
+
+// --- Tribunal Service ---
+
+const tribunalService = new TribunalService();
+
+app.post('/api/v1/tribunal/predict', async (req, res) => {
+  try {
+    const result = await tribunalService.getTribunalDecision();
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to get tribunal decision' });
+  }
 });
 
 
