@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { MenuBar } from './MenuBar';
 import { DraggablePanel } from './DraggablePanel';
-import { AgentsPanel } from './AgentsPanel';
+import AgentsPanel from './AgentsPanel';
 import { DatabaseWizard } from './DatabaseWizard';
-
-// --- Placeholder Panel Content ---
 
 const PlaceholderContent: React.FC<{ title: string }> = ({ title }) => (
   <div style={{ color: '#ccc' }}>
@@ -20,7 +18,7 @@ export const DashboardLayout: React.FC = () => {
 
   const [panels, setPanels] = useState({
     system: { isOpen: false },
-    trading: { isOpen: true }, // Open by default
+    trading: { isOpen: true },
     database: { isOpen: false },
     agents: { isOpen: false },
     news: { isOpen: false },
@@ -29,9 +27,10 @@ export const DashboardLayout: React.FC = () => {
   });
 
   const togglePanel = (panelId: string) => {
+    const id = panelId as keyof typeof panels;
     setPanels(prevPanels => ({
       ...prevPanels,
-      [panelId]: { ...prevPanels[panelId], isOpen: !prevPanels[panelId].isOpen },
+      [id]: { ...prevPanels[id], isOpen: !prevPanels[id].isOpen },
     }));
   };
 
@@ -57,9 +56,8 @@ export const DashboardLayout: React.FC = () => {
         body: JSON.stringify({ databaseUrl }),
       });
 
-      // Poll for the connection to be established
       let isConnected = false;
-      for (let i = 0; i < 10; i++) { // Poll for up to 10 seconds
+      for (let i = 0; i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         isConnected = await checkStatus();
         if (isConnected) break;
@@ -83,9 +81,8 @@ export const DashboardLayout: React.FC = () => {
       )}
 
       <main className="dashboard-main">
-        {/* Render all the panels. The DraggablePanel component will handle visibility. */}
-
         <DraggablePanel
+          id="trading"
           title="Trading"
           isOpen={panels.trading.isOpen}
           onClose={() => togglePanel('trading')}
@@ -95,6 +92,7 @@ export const DashboardLayout: React.FC = () => {
         </DraggablePanel>
 
         <DraggablePanel
+          id="system"
           title="System Status"
           isOpen={panels.system.isOpen}
           onClose={() => togglePanel('system')}
@@ -104,6 +102,7 @@ export const DashboardLayout: React.FC = () => {
         </DraggablePanel>
 
         <DraggablePanel
+          id="database"
           title="Database Management"
           isOpen={panels.database.isOpen}
           onClose={() => togglePanel('database')}
@@ -113,17 +112,14 @@ export const DashboardLayout: React.FC = () => {
         </DraggablePanel>
 
         <DraggablePanel
+          id="agents"
           title="Agents"
           isOpen={panels.agents.isOpen}
           onClose={() => togglePanel('agents')}
           initialPosition={{ x: 200, y: 200 }}
-          initialSize={{ width: 700, height: 500 }}
         >
           <AgentsPanel />
         </DraggablePanel>
-
-        {/* Add other panels here as they are developed */}
-
       </main>
     </div>
   );

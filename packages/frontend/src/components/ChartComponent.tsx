@@ -1,4 +1,3 @@
-import React from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -21,7 +20,7 @@ ChartJS.register(
   Legend
 );
 
-const ChartComponent = ({ chartData }) => {
+const ChartComponent = ({ chartData }: { chartData: [number, number][] }) => {
   const options = {
     responsive: true,
     plugins: {
@@ -36,11 +35,11 @@ const ChartComponent = ({ chartData }) => {
   };
 
   const data = {
-    labels: chartData.map(item => new Date(item[0]).toLocaleDateString()),
+    labels: chartData.map((item: any) => new Date(item[0]).toLocaleDateString()),
     datasets: [
       {
         label: 'Price',
-        data: chartData.map(item => item[1]),
+        data: chartData.map((item: any) => item[1]),
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
       },

@@ -10,29 +10,28 @@ interface Agent {
   performance: number;
 }
 
-interface AgentCardProps {
-  name: string;
-  status: string;
-  task: string;
-  performance: number;
-}
-
-const AgentCard: React.FC<AgentCardProps> = ({ name, status, task, performance }) => {
+const AgentCard: React.FC<Agent> = ({ name, status, task, performance }) => {
+  const isPositive = performance >= 0;
   return (
     <div className="agent-card">
-      <div className="agent-status">
+      <div className="agent-header">
         <div className={`status-dot ${status}`}></div>
-        <strong>{name}</strong>
+        <span className="agent-name">{name}</span>
+        <span className={`performance-badge ${isPositive ? 'positive' : 'negative'}`}>
+          {isPositive ? '▲' : '▼'} {(Math.abs(performance) * 100).toFixed(1)}%
+        </span>
       </div>
-      <div className="agent-details">
-        <div>Task: {task}</div>
-        <div>Performance: {performance > 0 ? '+' : ''}{(performance * 100).toFixed(1)}%</div>
+      <div className="agent-task">
+        <strong>Current Task:</strong> {task}
+      </div>
+      <div className="agent-status-text">
+        Status: <span className={`status-label ${status}`}>{status.toUpperCase()}</span>
       </div>
     </div>
   );
 };
 
-const AgentsPanel: React.FC = () => {
+export const AgentsPanel: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
 
   useEffect(() => {
@@ -47,7 +46,7 @@ const AgentsPanel: React.FC = () => {
     };
 
     fetchAgents();
-    const interval = setInterval(fetchAgents, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchAgents, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -56,14 +55,17 @@ const AgentsPanel: React.FC = () => {
       <div className="panel-header">
         <span>🤖 Multi-Agent System</span>
       </div>
-      <div className="panel-content">
-        {agents.length === 0 ? (
-          <div>Loading agents...</div>
-        ) : (
-          agents.map(agent => <AgentCard key={agent.id} {...agent} />)
-        )}
+      <div className="panel-content agents-panel-container">
+        <div className="agents-grid">
+          {agents.length === 0 ? (
+            <div className="loading-state">Initializing agents...</div>
+          ) : (
+            agents.map(agent => <AgentCard key={agent.id} {...agent} />)
+          )}
+        </div>
         <div className="agent-actions">
-          <button>➕ Create New Agent</button>
+          <button className="secondary-btn">➕ Deploy New Agent</button>
+          <button className="secondary-btn">🔄 Synchronize Tribunal</button>
         </div>
       </div>
     </div>

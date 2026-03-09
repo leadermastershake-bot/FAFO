@@ -48,11 +48,11 @@ function LlmSprite({ suggestion, onClick }: { suggestion: any, onClick: () => vo
   const mesh = useRef<Mesh>(null!);
   const [hovered, setHover] = useState(false);
 
-  useFrame((state, delta) => {
-    // Rotate the sprite
-    mesh.current.rotation.y += 0.01;
-    // Add a gentle hover effect
-    mesh.current.position.y = Math.sin(state.clock.elapsedTime) * 0.1;
+  useFrame((state) => {
+    if (mesh.current) {
+        mesh.current.rotation.y += 0.01;
+        mesh.current.position.y = Math.sin(state.clock.elapsedTime) * 0.1;
+    }
   });
 
   const color = suggestion.suggestion === 'buy' ? 'green' : 'red';
@@ -60,7 +60,7 @@ function LlmSprite({ suggestion, onClick }: { suggestion: any, onClick: () => vo
   return (
     <mesh
       ref={mesh}
-      scale={hovered ? 1.2 : 1}
+      scale={hovered ? [1.2, 1.2, 1.2] : [1, 1, 1]}
       onClick={onClick}
       onPointerOver={() => setHover(true)}
       onPointerOut={() => setHover(false)}>

@@ -3,23 +3,28 @@ import Draggable from 'react-draggable';
 import { X, Minus, Maximize2 } from 'lucide-react';
 import './DraggablePanel.css';
 
-interface DraggablePanelProps {
-  id: string;
+export interface DraggablePanelProps {
+  id?: string;
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  isOpen?: boolean;
   initialPosition?: { x: number; y: number };
+  initialSize?: { width: number; height: number };
 }
 
 export const DraggablePanel: React.FC<DraggablePanelProps> = ({
   title,
   children,
   onClose,
+  isOpen = true,
   initialPosition = { x: 50, y: 50 }
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const nodeRef = React.useRef(null);
+
+  if (!isOpen) return null;
 
   return (
     <Draggable

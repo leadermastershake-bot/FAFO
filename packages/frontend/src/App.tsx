@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import './App.css'
-import React, { useState, useEffect } from 'react';
-import { SetupWizard } from './components/SetupWizard'
-import LoginScreen from './components/LoginScreen'
-import SystemStatusPanel from './components/SystemStatusPanel'
-import TradingDashboardPanel from './components/TradingDashboardPanel'
-import DatabasePanel from './components/DatabasePanel'
-import AgentsPanel from './components/AgentsPanel'
-import ChatPanel from './components/ChatPanel'
-import WalletModal from './components/WalletModal'
-import ErrorBoundary from './components/ErrorBoundary'
+import { useState, useEffect } from 'react';
+import './App.css';
+import { SetupWizard } from './components/SetupWizard';
+import LoginScreen from './components/LoginScreen';
+import SystemStatusPanel from './components/SystemStatusPanel';
+import TradingDashboardPanel from './components/TradingDashboardPanel';
+import DatabasePanel from './components/DatabasePanel';
+import AgentsPanel from './components/AgentsPanel';
+import ChatPanel from './components/ChatPanel';
+import WalletModal from './components/WalletModal';
+import ErrorBoundary from './components/ErrorBoundary';
 
 interface User {
   username: string;
@@ -52,16 +51,32 @@ function App() {
   };
 
   if (!isSetupComplete) {
-    return <div className="loading">Loading system...</div>;
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', color: '#2563eb', fontWeight: 600 }}>
+        Loading system...
+      </div>
+    );
   }
 
   if (!isBackendConfigured) {
-    return <SetupWizard />;
+    return <SetupWizard onConfigurationSuccess={() => setIsBackendConfigured(true)} />;
   }
 
   if (!user) {
     return <LoginScreen onLogin={handleLogin} />;
   }
+
+  const [activePanels, setActivePanels] = useState({
+    system: true,
+    trading: true,
+    database: true,
+    agents: true,
+    chat: true
+  });
+
+  const togglePanel = (panel: keyof typeof activePanels) => {
+    setActivePanels(prev => ({ ...prev, [panel]: !prev[panel] }));
+  };
 
   return (
     <div className="app">
@@ -70,36 +85,46 @@ function App() {
         onClose={() => setIsWalletModalOpen(false)}
       />
       <div className="menu-bar">
-        <span style={{ fontWeight: 'bold' }}>METABOTPRIME vNext</span>
+        <span style={{ fontWeight: 'bold', color: 'var(--primary-color)', fontSize: '18px' }}>METABOTPRIME vNext</span>
         <div className="menu-separator"></div>
-        <div className="menu-item">📊 System</div>
-        <div className="menu-item">📈 Trading</div>
-        <div className="menu-item">🗃️ Database</div>
-        <div className="menu-item">🤖 Agents</div>
-        <div className="menu-item">💬 Chat</div>
+        <div className={`menu-item ${activePanels.system ? 'active' : ''}`} onClick={() => togglePanel('system')}>📊 System</div>
+        <div className={`menu-item ${activePanels.trading ? 'active' : ''}`} onClick={() => togglePanel('trading')}>📈 Trading</div>
+        <div className={`menu-item ${activePanels.database ? 'active' : ''}`} onClick={() => togglePanel('database')}>🗃️ Database</div>
+        <div className={`menu-item ${activePanels.agents ? 'active' : ''}`} onClick={() => togglePanel('agents')}>🤖 Agents</div>
+        <div className={`menu-item ${activePanels.chat ? 'active' : ''}`} onClick={() => togglePanel('chat')}>💬 Chat</div>
         <div className="menu-separator"></div>
         <div className="menu-item" onClick={() => setIsWalletModalOpen(true)}>💛 Wallets</div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <span>{user.username} ({user.accessLevel})</span>
+          <span style={{ fontSize: '14px', color: '#64748b' }}>{user.username} ({user.accessLevel})</span>
           <div className="menu-item" onClick={handleLogout}>🚪 Logout</div>
         </div>
       </div>
       <div className="panels-grid">
-        <ErrorBoundary>
-          <SystemStatusPanel />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <TradingDashboardPanel />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <DatabasePanel />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <AgentsPanel />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <ChatPanel />
-        </ErrorBoundary>
+        {activePanels.system && (
+          <ErrorBoundary>
+            <SystemStatusPanel />
+          </ErrorBoundary>
+        )}
+        {activePanels.trading && (
+          <ErrorBoundary>
+            <TradingDashboardPanel />
+          </ErrorBoundary>
+        )}
+        {activePanels.database && (
+          <ErrorBoundary>
+            <DatabasePanel />
+          </ErrorBoundary>
+        )}
+        {activePanels.agents && (
+          <ErrorBoundary>
+            <AgentsPanel />
+          </ErrorBoundary>
+        )}
+        {activePanels.chat && (
+          <ErrorBoundary>
+            <ChatPanel />
+          </ErrorBoundary>
+        )}
       </div>
     </div>
   );
