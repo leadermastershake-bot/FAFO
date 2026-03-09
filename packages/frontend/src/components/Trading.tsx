@@ -1,5 +1,3 @@
-// packages/frontend/src/components/Trading.tsx
-import React from 'react';
 import { VirtualizedCanvas } from './VirtualizedCanvas';
 
 export function Trading() {

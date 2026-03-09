@@ -1,6 +1,9 @@
-import React from 'react';
-
-const ControlPanel = ({ indicators, onIndicatorChange, onTimelineChange, onTradingPairChange }) => {
+const ControlPanel = ({ indicators, onIndicatorChange, onTimelineChange, onTradingPairChange }: {
+  indicators: any;
+  onIndicatorChange: (indicator: string) => void;
+  onTimelineChange: (timeline: string) => void;
+  onTradingPairChange: (pair: string) => void;
+}) => {
   return (
     <div className="control-panel">
       <h3>Trading Pair</h3>

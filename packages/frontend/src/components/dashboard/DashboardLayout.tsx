@@ -22,7 +22,6 @@ export const DashboardLayout: React.FC = () => {
       <div className="panel-container">
         {activePanels.includes('system') && (
           <DraggablePanel
-            id="system"
             title="System Status"
             onClose={() => togglePanel('system')}
             initialPosition={{ x: 20, y: 60 }}
@@ -38,7 +37,6 @@ export const DashboardLayout: React.FC = () => {
 
         {activePanels.includes('market') && (
           <DraggablePanel
-            id="market"
             title="Live Market"
             onClose={() => togglePanel('market')}
             initialPosition={{ x: 20, y: 250 }}
@@ -49,7 +47,6 @@ export const DashboardLayout: React.FC = () => {
 
         {activePanels.includes('trading') && (
           <DraggablePanel
-            id="trading"
             title="Trading Terminal"
             onClose={() => togglePanel('trading')}
             initialPosition={{ x: 400, y: 60 }}
@@ -60,18 +57,16 @@ export const DashboardLayout: React.FC = () => {
 
         {activePanels.includes('wallet') && (
           <DraggablePanel
-            id="wallet"
             title="Server Wallet"
             onClose={() => togglePanel('wallet')}
             initialPosition={{ x: 20, y: 400 }}
           >
-            <Wallet />
+            <Wallet isConfigured={true} />
           </DraggablePanel>
         )}
 
         {activePanels.includes('agents') && (
           <DraggablePanel
-            id="agents"
             title="Agent Tribunal"
             onClose={() => togglePanel('agents')}
             initialPosition={{ x: 850, y: 60 }}
@@ -82,7 +77,6 @@ export const DashboardLayout: React.FC = () => {
 
         {activePanels.includes('trades') && (
           <DraggablePanel
-            id="trades"
             title="Recent Trades"
             onClose={() => togglePanel('trades')}
             initialPosition={{ x: 400, y: 500 }}
@@ -93,7 +87,6 @@ export const DashboardLayout: React.FC = () => {
 
         {activePanels.includes('settings') && (
           <DraggablePanel
-            id="settings"
             title="Admin Preferences"
             onClose={() => togglePanel('settings')}
             initialPosition={{ x: 850, y: 400 }}
@@ -179,7 +172,7 @@ const TradesList: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {trades.map(trade => (
+          {trades.map((trade: any) => (
             <tr key={trade.id}>
               <td>{trade.symbol}</td>
               <td className={trade.side}>{trade.side}</td>

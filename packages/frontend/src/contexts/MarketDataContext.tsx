@@ -7,16 +7,18 @@ interface MarketData {
   };
 }
 
-interface MarketDataContextType {
+export interface MarketDataContextType {
   data: MarketData | null;
   lastUpdated: number;
   isLoading: boolean;
+  isStale: boolean;
 }
 
 const MarketDataContext = createContext<MarketDataContextType>({
   data: null,
   lastUpdated: 0,
-  isLoading: true
+  isLoading: true,
+  isStale: false
 });
 
 export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,8 +44,10 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => clearInterval(interval);
   }, []);
 
+  const isStale = lastUpdated > 0 && (Date.now() - lastUpdated) > 60000;
+
   return (
-    <MarketDataContext.Provider value={{ data, lastUpdated, isLoading }}>
+    <MarketDataContext.Provider value={{ data, lastUpdated, isLoading, isStale }}>
       {children}
     </MarketDataContext.Provider>
   );

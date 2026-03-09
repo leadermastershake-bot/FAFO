@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { createChart, type IChartApi, type ISeriesApi } from 'lightweight-charts';
 import { Panel } from './Panel';
 import { useMarketData } from '../contexts/MarketDataContext';
@@ -11,13 +11,13 @@ export const ChartingPanel: React.FC<ChartingPanelProps> = ({ onClose }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
-  const { data, isStale } = useMarketData();
+  const marketData = useMarketData();
 
   useEffect(() => {
     if (chartContainerRef.current && !chartRef.current) {
       chartRef.current = createChart(chartContainerRef.current, {
         width: chartContainerRef.current.clientWidth,
-        height: 300, // Initial height
+        height: 300,
         layout: {
           background: { color: '#0a0a0a' },
           textColor: '#00ff88',
@@ -40,21 +40,20 @@ export const ChartingPanel: React.FC<ChartingPanelProps> = ({ onClose }) => {
   }, []);
 
   useEffect(() => {
-    if (data && candlestickSeriesRef.current) {
-      const color = isStale ? '#ff4444' : '#00ff88';
-      // This is a simplified example. A real implementation would manage a series of candlestick data.
-      // For now, we'll just update a single point to show the real-time data.
+    if (marketData.data && candlestickSeriesRef.current) {
+      const color = marketData.isStale ? '#ff4444' : '#00ff88';
+      const btcPrice = (marketData.data as any).bitcoin?.usd || 0;
       const candlestickData = {
-          time: Math.floor(data.timestamp / 1000) as any,
-          open: data.price,
-          high: data.price,
-          low: data.price,
-          close: data.price,
+          time: Math.floor(Date.now() / 1000) as any,
+          open: btcPrice,
+          high: btcPrice,
+          low: btcPrice,
+          close: btcPrice,
           color,
       };
       candlestickSeriesRef.current.update(candlestickData);
     }
-  }, [data, isStale]);
+  }, [marketData.data, marketData.isStale]);
 
   return (
     <Panel title="📊 Financial Chart" onClose={onClose}>

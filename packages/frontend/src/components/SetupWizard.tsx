@@ -1,7 +1,11 @@
-// packages/frontend/src/components/SetupWizard.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-export function SetupWizard({ onConfigurationSuccess }) {
+interface Status {
+  isConfigured: boolean;
+  address: string | null;
+}
+
+export function SetupWizard({ onConfigurationSuccess }: { onConfigurationSuccess: () => void }) {
   const [isConfigured, setIsConfigured] = useState(true);
   const [rpcUrl, setRpcUrl] = useState('');
   const [privateKey, setPrivateKey] = useState('');
@@ -55,7 +59,7 @@ export function SetupWizard({ onConfigurationSuccess }) {
   }
 
   if (isConfigured) {
-    return null; // Don't render anything if the backend is configured
+    return null;
   }
 
   return (
@@ -72,7 +76,7 @@ export function SetupWizard({ onConfigurationSuccess }) {
               type="text"
               value={rpcUrl}
               onChange={(e) => setRpcUrl(e.target.value)}
-              placeholder="e.g., https://mainnet.infura.io/v3/..."
+              placeholder="https://..."
               required
             />
           </div>
@@ -83,7 +87,7 @@ export function SetupWizard({ onConfigurationSuccess }) {
               type="password"
               value={privateKey}
               onChange={(e) => setPrivateKey(e.target.value)}
-              placeholder="e.g., 0x..."
+              placeholder="0x..."
               required
             />
           </div>
